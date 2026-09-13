@@ -33,8 +33,8 @@ window.SITE_CONFIG = {
   aboutPhotoCaption: "Mousumee Ghosh",
 
   /* ---- Contact ----------------------------------------------------------- */
-  contactEmail:    "test@gmail.com",              // shown as text + used for the "Email" button
-  facebook:        "https://facebook.com/test",   // shown as text + used for the "Facebook" button (optional)
+  contactEmail:    "mousumee2009@gmail.com",                  // shown on the Email button + used for mailto
+  facebook:        "https://facebook.com/mousumee.ghosh",     // shown on the Social button + its link (optional)
 
   /* ---- Google Sheet (your no-code content manager) ----------------------- */
   // Share the sheet "Anyone with the link -> Viewer", then paste its ID here.

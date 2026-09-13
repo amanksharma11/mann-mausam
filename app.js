@@ -549,16 +549,18 @@
     var mailIcon='<svg class="btn-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7.5 8.5 6 8.5-6"/></svg>';
     var fbIcon='<svg class="btn-i" viewBox="0 0 24 24"><path fill="currentColor" d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z"/></svg>';
     var mailHref='mailto:'+esc(mail)+'?subject='+encodeURIComponent("A note about your poems");
+    // Each button carries a small translucent label on top and the real address/link below,
+    // so the contact is readable without clicking. Both open in a new tab so the poems stay put.
+    function card(href, icon, label, value){
+      return '<a class="btn btn--hero btn--contact" href="'+href+'" target="_blank" rel="noopener">'+icon+
+        '<span class="btn-contact-text"><span class="btn-contact-label">'+esc(label)+'</span>'+
+        '<span class="btn-contact-value">'+esc(value)+'</span></span></a>';
+    }
     var out="";
-    if(mail) out+='<a class="btn btn--hero" href="'+mailHref+'">'+mailIcon+'Email</a>';
-    if(fb)   out+='<a class="btn btn--hero" href="'+esc(fbLink(fb))+'" target="_blank" rel="noopener">'+fbIcon+'Facebook</a>';
-    // Also print the address and link as readable text, so people can see (and copy) them
-    // without having to click a button.
-    var lines="";
-    if(mail) lines+='<p class="contact-line"><a href="'+mailHref+'">'+esc(mail)+'</a></p>';
-    if(fb)   lines+='<p class="contact-line"><a href="'+esc(fbLink(fb))+'" target="_blank" rel="noopener">'+esc(fbShow(fb))+'</a></p>';
-    area.innerHTML = (out||lines)
-      ? (out?'<div class="contact-actions">'+out+'</div>':'') + (lines?'<div class="contact-details">'+lines+'</div>':'')
+    if(mail) out+=card(mailHref, mailIcon, "Email", mail);
+    if(fb)   out+=card(fbLink(fb), fbIcon, "Social media", fbShow(fb));
+    area.innerHTML = out
+      ? '<div class="contact-actions">'+out+'</div>'
       : '<p>Add a contact email or Facebook link in <code>config.js</code>.</p>';
   }
 
