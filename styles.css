@@ -1,0 +1,508 @@
+/* =============================================================================
+   MANN MAUSAM - poems by Mousumee Ghosh
+   Retro-modern, Bengal-inspired. Warm printed-paper by day, lamplit by night.
+   ============================================================================= */
+
+:root {
+  /* Day palette - warm chapbook paper */
+  --paper:      #f4ead9;
+  --paper-2:    #ecdfc7;
+  --card:       #fdf7ea;
+  --ink:        #2a2016;
+  --ink-soft:   #5c4d3d;
+  --line:       #d8c6a3;
+
+  --terracotta: #c1502e;
+  --terracotta-2:#a53f22;
+  --marigold:   #e0932a;
+  --indigo:     #2f3e6e;
+  --teal:       #1f6f6b;
+  --rose:       #b23a5b;
+  --leaf:       #2f7a5b;
+
+  --brand:      var(--terracotta);
+  --accent:     var(--marigold);
+
+  --shadow:     4px 4px 0 rgba(42,32,22,.16), 0 16px 34px -22px rgba(42,32,22,.5);
+  --shadow-sm:  3px 3px 0 rgba(42,32,22,.12);
+  --shadow-hard: 6px 6px 0 var(--ink);
+  --radius:     16px;
+  --radius-sm:  10px;
+
+  --f-display:  "Fraunces", "Baloo Da 2", Georgia, serif;
+  --f-body:     "Spectral", Georgia, serif;
+  --f-bn:       "Tiro Bangla", "Noto Serif Bengali", serif;
+  --f-bn-disp:  "Baloo Da 2", "Tiro Bangla", serif;
+  --f-hi:       "Tiro Devanagari Hindi", "Noto Serif Devanagari", serif;
+  --f-hi-disp:  "Baloo 2", "Tiro Devanagari Hindi", serif;
+  --f-type:     "Special Elite", "Courier New", monospace;
+
+  --maxw: 1120px;
+  --dot: rgba(42,32,22,.06);   /* newsprint dot ink */
+  --weave: rgba(42,32,22,.028);
+}
+
+:root[data-theme="dark"] {
+  --paper:      #14161f;
+  --paper-2:    #191c28;
+  --card:       #1e2130;
+  --ink:        #efe3cf;
+  --ink-soft:   #b7ab97;
+  --line:       #34384a;
+
+  --terracotta: #e2734d;
+  --terracotta-2:#d0603c;
+  --marigold:   #f1b446;
+  --indigo:     #8ea0e0;
+  --teal:       #4fb3aa;
+  --rose:       #e8768f;
+  --leaf:       #7fc2a0;
+
+  --shadow:     4px 4px 0 rgba(0,0,0,.55), 0 20px 40px -22px rgba(0,0,0,.85);
+  --shadow-sm:  3px 3px 0 rgba(0,0,0,.5);
+  --shadow-hard: 6px 6px 0 rgba(0,0,0,.7);
+  --dot: rgba(239,227,207,.05);
+  --weave: rgba(239,227,207,.022);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:#14161f; --paper-2:#191c28; --card:#1e2130;
+    --ink:#efe3cf; --ink-soft:#b7ab97; --line:#34384a;
+    --terracotta:#e2734d; --terracotta-2:#d0603c; --marigold:#f1b446;
+    --indigo:#8ea0e0; --teal:#4fb3aa; --rose:#e8768f; --leaf:#7fc2a0;
+    --shadow:4px 4px 0 rgba(0,0,0,.55),0 20px 40px -22px rgba(0,0,0,.85);
+    --shadow-sm:3px 3px 0 rgba(0,0,0,.5); --shadow-hard:6px 6px 0 rgba(0,0,0,.7);
+    --dot:rgba(239,227,207,.05); --weave:rgba(239,227,207,.022);
+  }
+}
+
+/* ---- Base ---------------------------------------------------------------- */
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; scroll-padding-top: 5rem; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}
+
+body {
+  margin: 0;
+  font-family: var(--f-body);
+  font-size: clamp(1rem, 0.96rem + 0.28vw, 1.12rem);
+  line-height: 1.68;
+  color: var(--ink);
+  background-color: var(--paper);
+  /* newsprint: a halftone dot screen over a fine woven grid */
+  background-image:
+    radial-gradient(circle at 1px 1px, var(--dot) 1px, transparent 1.5px),
+    repeating-linear-gradient(0deg,  var(--weave) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(90deg, var(--weave) 0 1px, transparent 1px 5px);
+  background-size: 7px 7px, auto, auto;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+/* soft colour wash, fixed behind everything */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    radial-gradient(circle at 12% 16%, color-mix(in srgb, var(--marigold) 14%, transparent) 0, transparent 40%),
+    radial-gradient(circle at 88% 6%, color-mix(in srgb, var(--terracotta) 12%, transparent) 0, transparent 36%),
+    radial-gradient(circle at 80% 94%, color-mix(in srgb, var(--teal) 12%, transparent) 0, transparent 40%);
+}
+main, .site-header, .site-footer { position: relative; z-index: 1; }
+
+img, svg { max-width: 100%; }
+.wrap { width: min(100% - 2.5rem, var(--maxw)); margin-inline: auto; }
+h1,h2,h3 { font-family: var(--f-display); font-weight: 600; line-height: 1.12; letter-spacing: -.01em; font-variation-settings: "SOFT" 20, "WONK" 1, "opsz" 40; }
+a { text-underline-offset: 3px; }
+a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, in every theme */
+:root[data-theme="dark"] a:not(.btn) { color: var(--terracotta); }
+::selection { background: color-mix(in srgb, var(--marigold) 45%, transparent); }
+:focus-visible { outline: 3px solid var(--indigo); outline-offset: 2px; }
+.skip-link { position: absolute; left: -9999px; background: var(--ink); color: var(--paper); padding: .6rem 1rem; z-index: 200; border-radius: 0 0 8px 0; }
+.skip-link:focus { left: 0; top: 0; }
+
+[lang="bn"] { font-family: var(--f-bn); }
+[lang="hi"] { font-family: var(--f-hi); }
+
+/* ---- Buttons ------------------------------------------------------------- */
+.btn {
+  font-family: var(--f-display); font-weight: 600; font-size: 1rem;
+  border: 2px solid var(--ink); border-radius: 999px;
+  padding: .58em 1.2em; cursor: pointer; background: var(--card); color: var(--ink);
+  box-shadow: var(--shadow-sm); transition: transform .12s ease, box-shadow .12s ease, background .2s;
+  display: inline-flex; align-items: center; gap: .5em; text-decoration: none;
+}
+.btn:hover { transform: translateY(-2px); box-shadow: 5px 6px 0 rgba(42,32,22,.18); background: color-mix(in srgb, var(--marigold) 26%, var(--card)); }
+.btn:active { transform: translate(2px,2px); box-shadow: 0 0 0 var(--ink); }
+.btn--primary { background: var(--terracotta); color: #fff5ea; border-color: var(--terracotta-2); }
+.btn--primary:hover { background: var(--terracotta-2); }
+:root[data-theme="dark"] .btn--primary { color: #1a1206; }
+.btn--ghost { background: transparent; }
+.btn--sm { font-size: .85rem; padding: .42em .85em; border-width: 1.5px; gap: .4em; }
+/* hero buttons: matched, empty by default, terracotta on hover */
+.btn--hero { background: transparent; }
+.btn--hero:hover { background: var(--terracotta); color: #fff5ea; border-color: var(--terracotta-2); }
+:root[data-theme="dark"] .btn--hero:hover { color: #1a1206; }
+.btn-i { width: 1.1em; height: 1.1em; flex: none; }
+.btn--hero .btn-i { color: var(--terracotta); }   /* icons in the theme orange, matching the star */
+.btn--hero:hover .btn-i { color: inherit; }
+.btn-star { color: var(--terracotta); }
+.btn--hero:hover .btn-star { color: inherit; }
+
+/* ============================ Pull-chain switch =========================== */
+.pull-chain {
+  position: fixed; top: 0; right: clamp(.5rem, 2vw, 1.25rem); z-index: 60;
+  background: none; border: 0; padding: 0;
+  transform-origin: top right; pointer-events: none; touch-action: none;   /* never let a drag here turn into a page scroll on touch */
+}
+.pc-swing { display: inline-block; transform-origin: top center; animation: sway 5.5s ease-in-out infinite; }
+@keyframes sway { 0%,100% { transform: rotate(-2.4deg); } 50% { transform: rotate(2.4deg); } }
+.pc-svg { display: block; pointer-events: none; overflow: visible; }   /* let the bulb show when it stretches past the viewBox on a downward pull */
+#pcPull { transform-origin: 60px 6px; }   /* stretch from the top mount, which stays put */
+#pcKnob { transform-origin: 60px 148px; }   /* the bulb pivots at its neck, where the chain meets it -- see note below */
+/* When the chain is pulled we stretch the whole #pcPull group vertically, which
+   would squash-stretch the bulb too. #pcKnob gets the exact inverse vertical
+   scale (1/scale, applied in JS; matching keyframes below), so the chain lengthens
+   but the bulb keeps its true shape and simply rides down to the chain's new end. */
+#pcPull, .pc-hint { pointer-events: auto; cursor: pointer; touch-action: none; }
+/* a big, invisible grab target over the bulb so it's easy to catch -- especially by touch on phones */
+.pc-grab { fill: transparent; pointer-events: auto; cursor: grab; touch-action: none; }
+.pull-chain.dragging .pc-grab { cursor: grabbing; }
+.pull-chain.dragging #pcPull, .pull-chain.dragging #pcKnob { transition: none; }   /* live 1:1 tracking while actually being dragged */
+.pull-chain.dragging .pc-swing { animation: none; }   /* stop the idle sway while dragging so the chain tracks the finger steadily */
+
+.pc-mount { fill: var(--ink-soft); }
+.pc-cord  { fill: var(--ink-soft); }
+.pc-bulb  { fill: color-mix(in srgb, var(--marigold) 20%, var(--card)); stroke: var(--ink-soft); stroke-width: 2.4; transition: fill .4s, filter .4s; }
+.pc-filament { fill: none; stroke: var(--ink-soft); stroke-width: 1.6; opacity: .55; }
+.pc-base  { fill: var(--ink-soft); }
+.pc-base-line { stroke: var(--paper); stroke-width: 1.4; }
+.pc-glow  { opacity: 0; transition: opacity .5s; pointer-events: none; }   /* purely visual; the grab circle handles hits */
+.pc-hint  { display: block; text-align: center; font-family: var(--f-type); font-size: .6rem; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-soft); opacity: .5; margin-top: -10px; }
+
+/* lit at night */
+:root[data-theme="dark"] .pc-bulb { fill: var(--marigold); filter: drop-shadow(0 0 5px var(--marigold)); }
+:root[data-theme="dark"] .pc-filament { stroke: #6b3d0a; opacity: .9; }
+:root[data-theme="dark"] .pc-glow { opacity: .85; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pc-bulb { fill: var(--marigold); filter: drop-shadow(0 0 5px var(--marigold)); }
+  :root:not([data-theme="light"]) .pc-glow { opacity: .85; }
+}
+.pull-chain.pulling #pcPull { animation: tugStretch .6s cubic-bezier(.34,1.56,.64,1); }
+.pull-chain.pulling #pcKnob { animation: tugStretchBulb .6s cubic-bezier(.34,1.56,.64,1); }
+/* --swing carries whatever angle it was released at (set from JS just before this
+   plays) so letting go after swinging it sideways settles back to centre, while the
+   length still overshoots and springs back -- one motion for both gestures. */
+@keyframes tugStretch {
+  0%   { transform: rotate(var(--swing,0deg)) scaleY(1); }
+  35%  { transform: rotate(calc(var(--swing,0deg) * .4)) scaleY(1.14); }
+  70%  { transform: rotate(calc(var(--swing,0deg) * -.15)) scaleY(.98); }
+  100% { transform: rotate(0deg) scaleY(1); }
+}
+/* inverse of tugStretch's vertical scale, so the bulb stays its true shape through the spring */
+@keyframes tugStretchBulb {
+  0%   { transform: scaleY(1); }
+  35%  { transform: scaleY(0.877); }
+  70%  { transform: scaleY(1.020); }
+  100% { transform: scaleY(1); }
+}
+.pull-chain:hover #pcPull { transform: scaleY(1.05); }
+.pull-chain:hover #pcKnob { transform: scaleY(0.952); }
+@media (prefers-reduced-motion: reduce) {
+  .pc-swing { animation: none; }
+  .pull-chain.pulling #pcPull, .pull-chain:hover #pcPull,
+  .pull-chain.pulling #pcKnob, .pull-chain:hover #pcKnob { animation: none; transform: none; }
+}
+@media (max-width: 680px) { .pull-chain { transform: scale(.66); } }
+
+/* ============================ Header ====================================== */
+.site-header {
+  position: sticky; top: 0; z-index: 40;
+  backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--paper) 84%, transparent);
+  border-bottom: 2px solid var(--line);
+}
+.header-inner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .55rem 0; padding-right: clamp(58px, 9vw, 96px); }
+.brand { display: flex; align-items: center; gap: .65rem; text-decoration: none; color: var(--ink); }
+.brand-mark { flex: none; border-radius: 9px; box-shadow: var(--shadow-sm); }
+.brand-text { display: flex; flex-direction: column; line-height: 1.06; }
+.brand-name { font-family: var(--f-display); font-weight: 800; font-size: 1.28rem; font-variation-settings: "SOFT" 30, "WONK" 1, "opsz" 40; }
+.brand-sub  { font-size: .74rem; letter-spacing: .04em; color: var(--ink-soft); }
+.site-nav { display: flex; gap: .35rem; flex-wrap: wrap; }
+.site-nav a {
+  text-decoration: none; color: var(--ink); font-family: var(--f-display);
+  font-weight: 600; font-size: .95rem; padding: .3em .8em; border-radius: 999px;
+  border: 1.5px solid transparent;
+}
+/* Selected (current-section) link -- a solid fill. */
+.site-nav a.active { background: var(--ink); color: var(--paper); }
+/* Preview state -- a LIGHTER wash than "selected": true hover on a mouse, or a
+   press-and-hold on touch. Gating hover behind hover:hover means a tap on a phone
+   can't leave a stuck hover colour, and :active reverts the instant the finger lifts. */
+@media (hover: hover) { .site-nav a:not(.active):hover { background: color-mix(in srgb, var(--marigold) 26%, transparent); } }
+.site-nav a:not(.active):active { background: color-mix(in srgb, var(--marigold) 26%, transparent); }
+
+/* Night mode: warm terracotta. Selected = solid fill + dark text (stays solid, even on
+   hover/press); preview (non-selected only) = a lighter, translucent terracotta wash. */
+:root[data-theme="dark"] .site-nav a.active { background: var(--terracotta); color: #1a1206; border-color: var(--terracotta-2); }
+:root[data-theme="dark"] .site-nav a:not(.active):active { background: color-mix(in srgb, var(--terracotta) 32%, transparent); border-color: color-mix(in srgb, var(--terracotta) 55%, var(--line)); }
+@media (hover: hover) { :root[data-theme="dark"] .site-nav a:not(.active):hover { background: color-mix(in srgb, var(--terracotta) 32%, transparent); border-color: color-mix(in srgb, var(--terracotta) 55%, var(--line)); } }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .site-nav a.active { background: var(--terracotta); color: #1a1206; border-color: var(--terracotta-2); }
+  :root:not([data-theme="light"]) .site-nav a:not(.active):active { background: color-mix(in srgb, var(--terracotta) 32%, transparent); border-color: color-mix(in srgb, var(--terracotta) 55%, var(--line)); }
+}
+@media (prefers-color-scheme: dark) and (hover: hover) {
+  :root:not([data-theme="light"]) .site-nav a:not(.active):hover { background: color-mix(in srgb, var(--terracotta) 32%, transparent); border-color: color-mix(in srgb, var(--terracotta) 55%, var(--line)); }
+}
+@media (max-width: 560px) {
+  /* keep the desktop arrangement on phones too: brand (logo + name + subtitle)
+     on the left, nav on the right -- just tightened so it fits a narrow screen.
+     The subtitle stays visible on every device. */
+  .brand { gap: .5rem; }
+  .brand-mark { width: 34px; height: 34px; }
+  .brand-name { font-size: 1.08rem; }
+  .brand-sub { font-size: .62rem; }
+  .site-nav { gap: .18rem; flex-wrap: nowrap; }
+  .site-nav a { padding: .3em .5em; font-size: .8rem; }
+}
+
+/* ============================ Hero ======================================== */
+.hero { position: relative; text-align: center; padding: clamp(2.4rem, 6vw, 5rem) 0 0; overflow: hidden; }
+.hero-bg { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.hero-mandala { position: absolute; width: min(60vw, 520px); color: var(--terracotta); opacity: .10; top: -8%; left: -10%; animation: spin 90s linear infinite; }
+.hero-mandala--2 { color: var(--teal); left: auto; right: -14%; top: auto; bottom: -30%; width: min(50vw, 420px); animation-duration: 120s; animation-direction: reverse; opacity: .09; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .hero-mandala { animation: none; } }
+
+.hero-inner { position: relative; }
+.hero-eyebrow { font-family: var(--f-type); text-transform: uppercase; letter-spacing: clamp(.12em,1.2vw,.3em); font-size: clamp(.6rem,2.6vw,.72rem); color: var(--terracotta-2); display: flex; align-items: center; justify-content: center; gap: .8em; flex-wrap: wrap; padding-inline: .5rem; }
+.hero-inner .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex: none; }
+.hero-title {
+  text-align: center;   /* the phrase stays centred on the page */
+  font-size: clamp(3.3rem, 9.2vw, 7.2rem); margin: 0 0 0; line-height: 1.16;
+  font-variation-settings: "opsz" 144, "SOFT" 0, "WONK" 1; font-weight: 700;
+  background: linear-gradient(120deg, var(--terracotta), var(--rose) 42%, var(--indigo));
+  -webkit-background-clip: text; background-clip: text; color: transparent; padding: .16em 0 .06em;   /* top room so tall Bangla/Hindi matras aren't clipped */
+  transition: opacity .4s ease;   /* fades as the title cycles through the languages */
+}
+/* Each word wears its own script's display face; the gradient stays on the whole line
+   so one colour run flows across both words whatever languages they're showing. */
+/* Words size to their own content, so the gap between them stays tight and even in every
+   language. They're plain inline, so the row height is set by the title's line-height --
+   not each font's own height -- which stops the block growing/shrinking (no vertical jump)
+   as it cycles. The single space between the two words (in the display font) is the gap.
+   The cross-fade is ease-in-out for a gentle change. */
+.ht-word { display: inline; white-space: nowrap; transition: opacity .5s ease-in-out; }
+/* An invisible, zero-width strut in the tallest (Bangla) display face pins the title's
+   line height, so the row -- and the page below it -- doesn't nudge up on the all-English
+   step where the Latin font is a touch shorter than the Indic ones. */
+.hero-title::before { content: "\00a0"; display: inline-block; width: 0; font-family: var(--f-bn-disp); }
+.ht-word.lang-en { font-family: var(--f-display); }
+.ht-word.lang-bn { font-family: var(--f-bn-disp); }
+.ht-word.lang-hi { font-family: var(--f-hi-disp); font-size: 1.06em; }   /* Devanagari renders a touch smaller */
+@media (prefers-reduced-motion: reduce) { .hero-title, .ht-word { transition: none; } }
+/* one solid colour for the whole sub-line, matching the byline above it */
+.hero-alt { margin: -.15rem 0 0; display: flex; gap: .6em; justify-content: center; align-items: center; flex-wrap: wrap; font-family: var(--f-display); font-weight: 600; font-size: clamp(1.05rem, 3.2vw, 1.7rem); color: var(--terracotta-2); }
+.hero-alt #heroHindi { font-family: var(--f-hi-disp); font-size: 1.14em; line-height: 1; }
+.hero-eyebrow { margin: 0; }   /* spacing is handled by the title/sub-line margins for even gaps */
+/* one family, weight and size for all three languages, so the boldness matches.
+   Baloo Da 2 covers Latin + Bengali; Baloo 2 covers Devanagari. */
+#heroByline { display: inline-block; transition: opacity .38s ease; font-family: var(--f-bn-disp); font-weight: 600; font-size: clamp(.92rem, 2.5vw, 1.18rem); text-transform: none; letter-spacing: normal; }
+#heroByline[lang="hi"] { font-family: var(--f-hi-disp); }
+@media (prefers-reduced-motion: reduce) { #heroByline { transition: none; } }
+.hero-tagline { max-width: 52ch; margin: 1em auto 0; color: var(--ink-soft); font-size: 1.06rem; line-height: 1.7; font-style: italic; }
+.hero-actions { display: flex; gap: .8rem; justify-content: center; flex-wrap: wrap; margin: 1.6rem 0 2.4rem; }
+
+.kantha-border { height: 16px; margin-top: 1rem; background: repeating-linear-gradient(90deg, var(--terracotta) 0 14px, transparent 14px 26px) center/auto 3px no-repeat; position: relative; }
+.kantha-border::before, .kantha-border::after { content: ""; position: absolute; inset-inline: 0; height: 2px; background: repeating-linear-gradient(90deg, var(--teal) 0 8px, transparent 8px 20px); }
+.kantha-border::before { top: 2px; } .kantha-border::after { bottom: 2px; opacity: .6; }
+
+/* ============================ Section labels ============================== */
+.section-label { display: flex; align-items: center; gap: 1rem; margin: 3rem 0 1.4rem; color: var(--ink); font-size: clamp(1.5rem, 3.5vw, 2.1rem); }
+.section-label::before, .section-label::after { content: ""; height: 2px; flex: 1; background: linear-gradient(90deg, transparent, var(--line)); }
+.section-label::before { background: linear-gradient(90deg, var(--line), transparent); }
+.section-label span { flex: none; }
+
+/* ============================ Poem of the day ============================= */
+.potd .potd-card {
+  display: grid; grid-template-columns: auto 1fr; gap: clamp(1rem, 4vw, 2.2rem);
+  background: var(--card); border: 2px solid var(--ink); box-shadow: var(--shadow-hard);
+  border-radius: var(--radius); padding: clamp(1.4rem, 4vw, 2.4rem); position: relative; overflow: hidden;
+}
+@media (max-width: 620px) { .potd .potd-card { grid-template-columns: 1fr; } }
+.potd-side { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); font-family: var(--f-display); font-weight: 600; font-size: .82rem; letter-spacing: .14em; text-transform: uppercase; color: #fff5ea; background: linear-gradient(0deg, var(--terracotta), var(--terracotta-2)); padding: 1rem .5rem; border-radius: 8px; display: grid; place-items: center; }
+@media (max-width: 620px) { .potd-side { writing-mode: horizontal-tb; transform: none; padding: .4rem; } }
+.potd-main h3 { font-size: clamp(1.6rem, 4.5vw, 2.3rem); margin: 0 0 .1em; }
+.potd-main h3.lang-bn { font-family: var(--f-bn-disp); } .potd-main h3.lang-hi { font-family: var(--f-hi-disp); }
+.potd-main .roman { font-family: var(--f-type); font-size: .82rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); }
+.potd-verse { font-size: clamp(1.1rem, 2.6vw, 1.35rem); margin: 1rem 0 1.4rem; white-space: pre-line; }
+.potd-verse.lang-bn { font-family: var(--f-bn); } .potd-verse.lang-hi { font-family: var(--f-hi); }
+
+/* ============================ Controls ==================================== */
+.controls { display: flex; flex-wrap: wrap; gap: .8rem; align-items: center; margin-bottom: 1.2rem; }
+.search-box { display: flex; align-items: center; gap: .5em; flex: 1 1 240px; background: var(--card); border: 2px solid var(--ink); border-radius: 999px; padding: .48em 1em; color: var(--ink-soft); box-shadow: var(--shadow-sm); }
+.search-box input { border: 0; background: none; outline: none; width: 100%; font: inherit; color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: .5em; }
+.chip { font-family: var(--f-display); font-weight: 600; font-size: .85rem; cursor: pointer; border: 1.5px solid var(--ink); background: var(--card); color: var(--ink); padding: .34em .8em; border-radius: 999px; transition: transform .1s, background .15s; }
+.chip:hover { background: color-mix(in srgb, var(--marigold) 30%, var(--card)); }
+.chip:active { transform: translateY(1px); }
+.chip.active { background: var(--ink); color: var(--paper); }
+.chips--themes .chip { font-size: .78rem; font-family: var(--f-type); letter-spacing: .03em; text-transform: lowercase; border-color: var(--line); }
+/* language chips share the themes' lowercase typewriter look */
+#langChips .chip { font-family: var(--f-type); font-size: .8rem; letter-spacing: .03em; text-transform: lowercase; }
+.chips--themes .chip.active { background: var(--terracotta); border-color: var(--terracotta-2); color: #fff5ea; }
+:root[data-theme="dark"] .chips--themes .chip.active { color:#1a1206; }
+
+.result-count { color: var(--ink-soft); font-size: .9rem; margin: 0 0 1rem; min-height: 1.2em; }
+.source-note { margin-top: 1.4rem; font-size: .82rem; color: var(--ink-soft); border: 1.5px dashed var(--line); border-radius: var(--radius-sm); padding: .7rem 1rem; }
+
+/* ============================ Poem grid =================================== */
+.poem-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 17.5rem), 1fr)); gap: 1.5rem; }
+.poem-card {
+  position: relative; text-align: left; cursor: pointer;
+  background: var(--card); border: 2px solid var(--ink); border-radius: var(--radius);
+  padding: 1.3rem 1.3rem 1.1rem; box-shadow: var(--shadow-sm);
+  transition: transform .16s ease, box-shadow .16s ease; overflow: hidden;
+  display: flex; flex-direction: column; min-height: 210px; color: inherit;
+}
+.poem-card:nth-child(3n+1) { transform: rotate(-.6deg); }
+.poem-card:nth-child(3n+2) { transform: rotate(.5deg); }
+.poem-card:nth-child(3n)   { transform: rotate(-.25deg); }
+.poem-card::after { content: ""; position: absolute; right: 0; bottom: 0; width: 74px; height: 74px; background: currentColor; color: var(--accent); opacity: .14; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: right bottom; mask-position: right bottom; -webkit-mask-size: contain; mask-size: contain; }
+.poem-card.lang-en::after { right: -14px; bottom: -14px; }   /* star tucked a little deeper into the corner */
+.poem-card.lang-hi::after { right: -9px; bottom: -9px; }   /* paisley nudged a little into the corner too */
+/* a different corner motif + colour for each language: lotus / paisley / star */
+.poem-card.lang-bn::after { color: var(--teal); -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='10.2 9.5 26.3 22.7'%3E%3Cpath d='M24 9.5c4.1 3.7 6.1 7.8 6.1 11.7 0 4.1-2.7 7-6.1 7s-6.1-2.9-6.1-7c0-3.9 2-8 6.1-11.7z'/%3E%3Cpath d='M11.8 16.4c4.9 1.4 8 4.1 9.5 7.4 1.6 3.4.7 6.9-2.1 8-2.9 1.2-6-.5-7.5-3.9-1.5-3.2-1.8-7.3-1.2-11.5z'/%3E%3Cpath d='M36.2 16.4c.6 4.2.3 8.3-1.2 11.5-1.5 3.4-4.6 5.1-7.5 3.9-2.8-1.1-3.7-4.6-2.1-8 1.5-3.3 4.6-6 9.5-7.4z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='10.2 9.5 26.3 22.7'%3E%3Cpath d='M24 9.5c4.1 3.7 6.1 7.8 6.1 11.7 0 4.1-2.7 7-6.1 7s-6.1-2.9-6.1-7c0-3.9 2-8 6.1-11.7z'/%3E%3Cpath d='M11.8 16.4c4.9 1.4 8 4.1 9.5 7.4 1.6 3.4.7 6.9-2.1 8-2.9 1.2-6-.5-7.5-3.9-1.5-3.2-1.8-7.3-1.2-11.5z'/%3E%3Cpath d='M36.2 16.4c.6 4.2.3 8.3-1.2 11.5-1.5 3.4-4.6 5.1-7.5 3.9-2.8-1.1-3.7-4.6-2.1-8 1.5-3.3 4.6-6 9.5-7.4z'/%3E%3C/svg%3E"); }
+.poem-card.lang-hi::after { color: var(--terracotta); -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='9.2 2 29.9 34.8'%3E%3Cpath d='M20 2 C40 2 46 24 30 34 C18 41 6 34 10 22 C13 13 24 14 24 22'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='9.2 2 29.9 34.8'%3E%3Cpath d='M20 2 C40 2 46 24 30 34 C18 41 6 34 10 22 C13 13 24 14 24 22'/%3E%3C/svg%3E"); }
+.poem-card.lang-en::after { color: var(--indigo); -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='3 3 42 42'%3E%3Cpath d='M24 3 C25 14 34 23 45 24 C34 25 25 34 24 45 C23 34 14 25 3 24 C14 23 23 14 24 3 Z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='3 3 42 42'%3E%3Cpath d='M24 3 C25 14 34 23 45 24 C34 25 25 34 24 45 C23 34 14 25 3 24 C14 23 23 14 24 3 Z'/%3E%3C/svg%3E"); }
+.poem-card:hover { transform: rotate(0) translate(-2px,-3px); box-shadow: var(--shadow-hard); border-color: var(--ink); }
+.poem-card:active { transform: rotate(0) translate(2px,2px); box-shadow: 1px 1px 0 var(--ink); }
+.poem-card:focus-visible { outline: 3px solid var(--indigo); outline-offset: 2px; }
+.pc-lang { align-self: flex-start; font-family: var(--f-type); font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; padding: .22em .55em; border-radius: 999px; border: 1.3px solid currentColor; margin-bottom: .7rem; }
+.pc-lang.bn { color: var(--teal); } .pc-lang.hi { color: var(--terracotta-2); } .pc-lang.en { color: var(--indigo); }
+.poem-card h3 { font-size: 1.4rem; margin: 0 0 .1em; color: var(--ink); }
+.poem-card .roman { display:block; font-family: var(--f-type); font-size: .78rem; letter-spacing: .06em; color: var(--ink-soft); margin: 0 0 .55rem; }
+.poem-card .snippet { color: var(--ink-soft); margin: 0; flex: 1; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-line; }
+.poem-card.lang-bn h3 { font-family: var(--f-bn-disp); } .poem-card.lang-bn .snippet { font-family: var(--f-bn); }
+.poem-card.lang-hi h3 { font-family: var(--f-hi-disp); } .poem-card.lang-hi .snippet { font-family: var(--f-hi); }
+.pc-foot { margin-top: .9rem; padding-top: .7rem; border-top: 1.5px dashed var(--line); display: flex; flex-wrap: wrap; gap: .4em; align-items: center; }
+.pc-foot .tag { font-size: .68rem; font-family: var(--f-type); color: var(--ink-soft); background: color-mix(in srgb, var(--marigold) 18%, transparent); padding: .16em .5em; border-radius: 999px; }
+.pc-foot .has-audio { color: var(--leaf); font-size: .72rem; }
+
+/* ============================ About ====================================== */
+.about-card { display: grid; grid-template-columns: minmax(0, 15rem) 1fr; gap: clamp(1.4rem, 4vw, 2.6rem); align-items: start; background: var(--card); border: 2px solid var(--ink); border-radius: var(--radius); padding: clamp(1.4rem, 4vw, 2rem); box-shadow: var(--shadow-hard); }
+@media (max-width: 620px) { .about-card { grid-template-columns: 1fr; justify-items: center; text-align: center; } }
+.about-photo { margin: 0; }
+.photo-frame { position: relative; aspect-ratio: 4/5; width: 100%; max-width: 15rem; border: 2px solid var(--ink); border-radius: var(--radius-sm); overflow: hidden; background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--marigold) 26%, transparent), var(--paper-2)); box-shadow: 5px 5px 0 var(--ink); display: grid; place-items: center; }
+.photo-frame img { width: 100%; height: 100%; object-fit: cover; }
+.photo-placeholder { width: 74%; color: var(--terracotta); opacity: .8; }
+.about-photo figcaption { margin-top: .7rem; font-family: var(--f-type); font-size: .78rem; letter-spacing: .06em; color: var(--ink-soft); text-align: center; }
+.about-body h3 { margin: 0 0 .6rem; font-size: clamp(1.4rem,3.5vw,1.9rem); color: var(--terracotta); }
+.about-prose p { margin: 0 0 .9rem; }
+.about-prose p:last-child { margin-bottom: 0; }
+
+/* ============================ Contact ==================================== */
+.contact-card { background: var(--card); border: 2px solid var(--ink); border-radius: var(--radius); padding: clamp(1.4rem,4vw,2rem); box-shadow: var(--shadow-hard); text-align: center; }
+.contact-actions { display: flex; flex-wrap: wrap; gap: .8rem; justify-content: center; margin-top: 1.1rem; }
+/* the address + link shown as plain readable text under the buttons, so people can see them without clicking */
+.contact-details { margin-top: 1.1rem; display: grid; gap: .35rem; justify-items: center; }
+.contact-line { margin: 0; display: flex; align-items: baseline; gap: .5em; flex-wrap: wrap; justify-content: center; font-size: .95rem; }
+.contact-label { font-family: var(--f-type); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); }
+.contact-details a { color: var(--terracotta-2); text-decoration: underline; word-break: break-word; }
+:root[data-theme="dark"] .contact-details a { color: var(--terracotta); }
+.contact-form { display: grid; gap: .8rem; max-width: 460px; margin: 1rem auto 0; text-align: left; }
+.contact-form input, .contact-form textarea { font: inherit; padding: .7em .9em; border-radius: var(--radius-sm); border: 2px solid var(--line); background: var(--paper); color: var(--ink); }
+.contact-form textarea { min-height: 120px; resize: vertical; }
+
+/* ============================ Footer ====================================== */
+.site-footer { margin-top: 4rem; border-top: 2px solid var(--line); background: color-mix(in srgb, var(--paper-2) 60%, transparent); }
+.footer-inner { text-align: center; padding: 2.2rem 0; color: var(--ink-soft); }
+.footer-motif { width: 34px; height: 34px; color: var(--terracotta); opacity: .7; margin: 0 auto; }
+.footer-fine { font-size: .8rem; opacity: .82; }
+
+/* ============================ Reader (modal) ============================== */
+.reader { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: clamp(.5rem, 3vw, 2rem) clamp(1.7rem, 5vw, 2.5rem); }
+.reader[hidden] { display: none; }
+.reader-scrim { position: absolute; inset: 0; background: color-mix(in srgb, var(--ink) 58%, transparent); backdrop-filter: blur(3px); animation: fade .25s ease; }
+.reader-stage { position: relative; width: min(720px, 100%); display: flex; }
+.reader-panel { position: relative; width: 100%; max-height: 92dvh; overflow: auto; background: var(--card); border: 2px solid var(--ink); border-radius: var(--radius); box-shadow: var(--shadow-hard); padding: clamp(1.4rem, 4vw, 2.6rem); animation: rise .3s cubic-bezier(.2,.8,.2,1); }
+@keyframes fade { from { opacity: 0; } } @keyframes rise { from { opacity: 0; transform: translateY(18px); } }
+.reader-close { position: absolute; top: .8rem; right: .8rem; z-index: 2; border: 2px solid var(--ink); background: var(--paper); color: var(--ink); width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-size: 1rem; }
+.reader-close:hover { background: var(--terracotta); color: #fff; }
+
+/* previous / next poem, one on each side */
+.reader-nav { position: absolute; top: 50%; z-index: 85; width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--ink); background: var(--card); color: var(--ink); font-family: var(--f-display); font-size: 1.7rem; line-height: 1; cursor: pointer; display: grid; place-items: center; padding: 0 0 .12em; box-shadow: var(--shadow-sm); }
+.reader-nav:hover { background: var(--terracotta); color: #fff5ea; border-color: var(--terracotta-2); }
+/* straddle the popup card's left / right edges */
+.reader-prev { left: 0; transform: translate(-50%, -50%); }   /* centred on the card's left edge */
+.reader-next { right: 0; transform: translate(50%, -50%); }   /* centred on the card's right edge */
+@media (max-width: 560px) { .reader-nav { width: 36px; height: 36px; font-size: 1.3rem; } }
+
+/* every button in the popup highlights in the poem's language colour, on hover and click */
+#reader { --accent-lang: var(--terracotta); }
+#reader.lang-bn { --accent-lang: var(--teal); }
+#reader.lang-hi { --accent-lang: var(--terracotta); }
+#reader.lang-en { --accent-lang: var(--indigo); }
+/* Hover gets a light tint, not the full fill -- a toggle (Transliteration / English
+   meaning / Recite) that was just switched OFF but is still under the cursor must not
+   look identical to "on". Only a real press, or a toggle that is genuinely on, gets
+   the full solid fill (declared after, so it wins over the hover tint when both apply). */
+#reader .btn--sm:hover { background: color-mix(in srgb, var(--accent-lang) 22%, var(--card)); border-color: var(--accent-lang); }
+#reader .btn--sm:active, #reader .btn--sm.is-on,
+.reader-nav:hover, .reader-nav:active, .reader-close:hover {
+  background: var(--accent-lang); border-color: var(--accent-lang); color: #fff5ea;
+}
+:root[data-theme="dark"] #reader .btn--sm:active, :root[data-theme="dark"] #reader .btn--sm.is-on,
+:root[data-theme="dark"] .reader-nav:hover, :root[data-theme="dark"] .reader-nav:active, :root[data-theme="dark"] .reader-close:hover { color: #10131c; }
+
+/* the poem's per-language corner motif, carried into the popup (behind the text) */
+.reader-content { position: relative; z-index: 1; }
+.reader-panel::after { content: ""; position: absolute; right: 12px; bottom: 12px; width: 96px; height: 96px; background: currentColor; opacity: .1; z-index: 0; pointer-events: none; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: right bottom; mask-position: right bottom; -webkit-mask-size: contain; mask-size: contain; }
+.reader-panel.lang-bn::after { color: var(--teal); -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='10.2 9.5 26.3 22.7'%3E%3Cpath d='M24 9.5c4.1 3.7 6.1 7.8 6.1 11.7 0 4.1-2.7 7-6.1 7s-6.1-2.9-6.1-7c0-3.9 2-8 6.1-11.7z'/%3E%3Cpath d='M11.8 16.4c4.9 1.4 8 4.1 9.5 7.4 1.6 3.4.7 6.9-2.1 8-2.9 1.2-6-.5-7.5-3.9-1.5-3.2-1.8-7.3-1.2-11.5z'/%3E%3Cpath d='M36.2 16.4c.6 4.2.3 8.3-1.2 11.5-1.5 3.4-4.6 5.1-7.5 3.9-2.8-1.1-3.7-4.6-2.1-8 1.5-3.3 4.6-6 9.5-7.4z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='10.2 9.5 26.3 22.7'%3E%3Cpath d='M24 9.5c4.1 3.7 6.1 7.8 6.1 11.7 0 4.1-2.7 7-6.1 7s-6.1-2.9-6.1-7c0-3.9 2-8 6.1-11.7z'/%3E%3Cpath d='M11.8 16.4c4.9 1.4 8 4.1 9.5 7.4 1.6 3.4.7 6.9-2.1 8-2.9 1.2-6-.5-7.5-3.9-1.5-3.2-1.8-7.3-1.2-11.5z'/%3E%3Cpath d='M36.2 16.4c.6 4.2.3 8.3-1.2 11.5-1.5 3.4-4.6 5.1-7.5 3.9-2.8-1.1-3.7-4.6-2.1-8 1.5-3.3 4.6-6 9.5-7.4z'/%3E%3C/svg%3E"); }
+.reader-panel.lang-hi::after { color: var(--terracotta); -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='9.2 2 29.9 34.8'%3E%3Cpath d='M20 2 C40 2 46 24 30 34 C18 41 6 34 10 22 C13 13 24 14 24 22'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='9.2 2 29.9 34.8'%3E%3Cpath d='M20 2 C40 2 46 24 30 34 C18 41 6 34 10 22 C13 13 24 14 24 22'/%3E%3C/svg%3E"); }
+.reader-panel.lang-en::after { color: var(--indigo); -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='3 3 42 42'%3E%3Cpath d='M24 3 C25 14 34 23 45 24 C34 25 25 34 24 45 C23 34 14 25 3 24 C14 23 23 14 24 3 Z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='3 3 42 42'%3E%3Cpath d='M24 3 C25 14 34 23 45 24 C34 25 25 34 24 45 C23 34 14 25 3 24 C14 23 23 14 24 3 Z'/%3E%3C/svg%3E"); }
+
+.r-lang { font-family: var(--f-type); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--terracotta-2); }
+.r-lang.lang-bn { color: var(--teal); } .r-lang.lang-hi { color: var(--terracotta-2); } .r-lang.lang-en { color: var(--indigo); }
+.r-title { font-size: clamp(1.8rem, 5vw, 2.6rem); margin: .2rem 0 0; color: var(--ink); }
+.r-title.lang-bn { font-family: var(--f-bn-disp); color: var(--teal); }
+.r-title.lang-hi { font-family: var(--f-hi-disp); color: var(--terracotta-2); }
+.r-title.lang-en { color: var(--indigo); }
+.r-roman { font-family: var(--f-type); color: var(--ink-soft); margin: .2rem 0 0; letter-spacing: .06em; }
+.r-meta { display: flex; flex-wrap: wrap; gap: .5em; align-items: center; margin: .7rem 0 1.2rem; color: var(--ink-soft); font-size: .85rem; }
+.r-meta .tag { font-family: var(--f-type); background: color-mix(in srgb, var(--marigold) 18%, transparent); padding: .15em .55em; border-radius: 999px; }
+
+/* poem body with per-line reading aids appended beneath each line */
+.poem-body { font-size: clamp(1.15rem, 1rem + 1vw, 1.5rem); margin: 0; }
+.poem-body.lang-bn { font-family: var(--f-bn); } .poem-body.lang-hi { font-family: var(--f-hi); }
+.stanza { margin: 0 0 1.6rem; } .stanza:last-child { margin-bottom: 0; }
+.line { margin: 0 0 .15rem; }
+.aid-say, .aid-mean { display: block; font-family: var(--f-body); }
+.aid-say  { font-size: .66em; font-style: italic; color: var(--leaf); line-height: 1.4; }
+.aid-mean { font-size: .7em; color: var(--indigo); line-height: 1.45; padding-left: .8rem; border-left: 2px solid var(--rose); margin-top: .1rem; }
+.r-note { margin-top: 1.2rem; padding: .8rem 1rem; border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--marigold) 10%, transparent); font-size: .92rem; color: var(--ink-soft); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+
+.r-tools { display: grid; gap: 1rem; margin: 1.5rem 0 0; padding-top: 1.3rem; border-top: 1.5px dashed var(--line); }
+.tool-group { display: flex; flex-wrap: wrap; gap: .55rem; align-items: center; }
+.tool-label { width: 100%; margin: 0; font-family: var(--f-type); font-size: .66rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
+.btn--sm.is-on { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+:root[data-theme="dark"] .btn--sm.is-on { color: #10131c; }
+.r-status { margin: .3rem 0 0; font-size: .84rem; color: var(--ink-soft); min-height: 1.2em; }
+.r-status[data-tone="warn"] { color: var(--terracotta-2); }
+.rate-ctl { display: inline-flex; align-items: center; gap: .4em; font-size: .78rem; color: var(--ink-soft); }
+.rate-ctl input { accent-color: var(--brand); }
+
+.reciting { position: relative; }
+.reciting::after { content: ""; position: absolute; inset: -2px; border-radius: inherit; box-shadow: 0 0 0 0 color-mix(in srgb, var(--terracotta) 60%, transparent); animation: pulse 1.4s infinite; }
+@keyframes pulse { 70% { box-shadow: 0 0 0 9px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+
+/* ---- scroll reveal ------------------------------------------------------- */
+.reveal { opacity: 0; transform: translateY(20px); transition: opacity .55s ease, transform .55s ease; }
+.reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } .reader-scrim, .reader-panel { animation: none; } }
+
+/* ---- print --------------------------------------------------------------- */
+@media print {
+  .site-header, .site-footer, .pull-chain, .controls, .hero-actions, .kantha-border { display: none !important; }
+  body { background: #fff; color: #000; }
+}

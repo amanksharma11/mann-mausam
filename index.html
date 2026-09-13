@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="Mann Mausam · poems by Mousumee Ghosh, in Bangla, Hindi and English." />
+  <meta name="theme-color" content="#c1502e" />
+  <title>Mann Mausam · Mousumee Ghosh</title>
+
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..700&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Baloo+Da+2:wght@400..800&family=Tiro+Bangla:ital@0;1&family=Baloo+2:wght@400..800&family=Tiro+Devanagari+Hindi:ital@0;1&family=Special+Elite&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#poems">Skip to the poems</a>
+
+  <!-- Decorative SVG library -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <g id="motif-lotus">
+        <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <circle cx="60" cy="60" r="8"/>
+          <g id="petal-set"><path d="M60 52 C50 38 50 26 60 14 C70 26 70 38 60 52 Z"/></g>
+          <use href="#petal-set" transform="rotate(45 60 60)"/>
+          <use href="#petal-set" transform="rotate(90 60 60)"/>
+          <use href="#petal-set" transform="rotate(135 60 60)"/>
+          <use href="#petal-set" transform="rotate(180 60 60)"/>
+          <use href="#petal-set" transform="rotate(225 60 60)"/>
+          <use href="#petal-set" transform="rotate(270 60 60)"/>
+          <use href="#petal-set" transform="rotate(315 60 60)"/>
+          <circle cx="60" cy="60" r="34" stroke-dasharray="2 6"/>
+          <circle cx="60" cy="60" r="52" stroke-dasharray="1 9"/>
+        </g>
+      </g>
+      <g id="motif-paisley">
+        <path fill="currentColor" d="M20 2 C40 2 46 24 30 34 C18 41 6 34 10 22 C13 13 24 14 24 22 C24 27 18 28 17 24 C22 26 21 20 17 20 C11 20 10 28 16 32 C25 38 36 30 34 20 C31 8 20 4 12 8 C6 11 3 17 4 24"/>
+      </g>
+    </defs>
+  </svg>
+
+  <!-- Brand stamp mark (the favicon lotus), reused for logo + about -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="mark" viewBox="0 0 48 48">
+      <rect width="48" height="48" rx="10" fill="#c1502e"/>
+      <rect x="2.5" y="2.5" width="43" height="43" rx="8.5" fill="none" stroke="#f6efe0" stroke-width="1.4" opacity=".55"/>
+      <g fill="#f6efe0">
+        <path d="M24 9.5c4.1 3.7 6.1 7.8 6.1 11.7 0 4.1-2.7 7-6.1 7s-6.1-2.9-6.1-7c0-3.9 2-8 6.1-11.7z"/>
+        <path d="M11.8 16.4c4.9 1.4 8 4.1 9.5 7.4 1.6 3.4.7 6.9-2.1 8-2.9 1.2-6-.5-7.5-3.9-1.5-3.2-1.8-7.3-1.2-11.5z" opacity=".92"/>
+        <path d="M36.2 16.4c.6 4.2.3 8.3-1.2 11.5-1.5 3.4-4.6 5.1-7.5 3.9-2.8-1.1-3.7-4.6-2.1-8 1.5-3.3 4.6-6 9.5-7.4z" opacity=".92"/>
+      </g>
+      <circle cx="24" cy="22.5" r="2.7" fill="#e0932a"/>
+      <g fill="#f6efe0" opacity=".85"><circle cx="24" cy="35.5" r="1.5"/><circle cx="18.5" cy="34.4" r="1.1"/><circle cx="29.5" cy="34.4" r="1.1"/></g>
+    </symbol>
+  </svg>
+
+  <!-- ================= Pull-chain light switch (theme toggle) =============== -->
+  <button id="pullChain" class="pull-chain" aria-label="Toggle day and night reading light" aria-pressed="false" title="Pull the chain to switch day / night">
+    <span class="pc-swing">
+      <svg class="pc-svg" viewBox="0 0 120 240" width="94" height="188" aria-hidden="true">
+        <defs>
+          <radialGradient id="bulbGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%"   stop-color="var(--marigold)" stop-opacity="0.95"/>
+            <stop offset="55%"  stop-color="var(--marigold)" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="var(--marigold)" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <rect x="54" y="0" width="12" height="6" rx="2" class="pc-mount"/>
+        <g id="pcPull">
+          <g id="pcCord" class="pc-cord">
+            <circle cx="60" cy="11" r="3.1"/><circle cx="61.6" cy="20" r="3.1"/><circle cx="62.9" cy="29" r="3.1"/>
+            <circle cx="63.4" cy="38" r="3.1"/><circle cx="62.7" cy="47" r="3.1"/><circle cx="61" cy="56" r="3.1"/>
+            <circle cx="58.8" cy="65" r="3.1"/><circle cx="57.1" cy="74" r="3.1"/><circle cx="56.6" cy="83" r="3.1"/>
+            <circle cx="57.3" cy="92" r="3.1"/><circle cx="59" cy="101" r="3.1"/><circle cx="61.2" cy="110" r="3.1"/>
+            <circle cx="62.9" cy="119" r="3.1"/><circle cx="63.4" cy="128" r="3.1"/><circle cx="62.7" cy="137" r="3.1"/>
+            <circle cx="61" cy="146" r="3.1"/>
+          </g>
+          <g id="pcKnob">
+            <circle id="pcGlow" class="pc-glow" cx="60" cy="181" r="54" fill="url(#bulbGlow)"/>
+            <path class="pc-bulb" d="M60 148 A24 24 0 0 1 75.9 190 C73 197 70 200 67 203 L53 203 C50 200 47 197 44.1 190 A24 24 0 0 1 60 148 Z"/>
+            <path class="pc-filament" d="M54 182 q6 -10 12 0 M54 190 q6 -10 12 0"/>
+            <rect class="pc-base" x="52" y="203" width="16" height="12" rx="2"/>
+            <line class="pc-base-line" x1="52" y1="207" x2="68" y2="207"/>
+            <line class="pc-base-line" x1="52" y1="211" x2="68" y2="211"/>
+            <circle class="pc-grab" cx="60" cy="185" r="40"/>
+          </g>
+        </g>
+      </svg>
+    </span>
+    <span class="pc-hint">pull</span>
+  </button>
+
+  <!-- ================= Header ================================================ -->
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="#top" aria-label="Mann Mausam, home">
+        <svg class="brand-mark" width="40" height="40" aria-hidden="true"><use href="#mark"/></svg>
+        <span class="brand-text">
+          <span class="brand-name" id="brandName">Mann Mausam</span>
+          <span class="brand-sub" id="brandSub">By Mousumee Ghosh</span>
+        </span>
+      </a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="#poems" data-nav="poems">Poems</a>
+        <a href="#about" data-nav="about">About</a>
+        <a href="#contact" data-nav="contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="app">
+    <span id="top"></span>
+
+    <!-- ================= Hero ============================================== -->
+    <section class="hero" id="home">
+      <div class="hero-bg" aria-hidden="true">
+        <svg class="hero-mandala" viewBox="0 0 120 120"><use href="#motif-lotus"/></svg>
+        <svg class="hero-mandala hero-mandala--2" viewBox="0 0 120 120"><use href="#motif-lotus"/></svg>
+      </div>
+      <div class="wrap hero-inner">
+        <h1 class="hero-title" id="heroTitle" aria-label="Mann Mausam"><span class="ht-word" id="htWord1" lang="bn">মন</span> <span class="ht-word" id="htWord2" lang="bn">মৌসম</span></h1>
+        <p class="hero-alt"><span class="dot" aria-hidden="true"></span> <span id="heroSubline">Poems by Mousumee Ghosh</span> <span class="dot" aria-hidden="true"></span></p>
+        <p class="hero-tagline" id="heroTagline"></p>
+        <div class="hero-actions">
+          <a class="btn btn--hero" href="#poems"><svg class="btn-i" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M12 6.4C10.4 5 7.9 4.5 4 4.8v12.5c3.9-.3 6.4.2 8 1.6 1.6-1.4 4.1-1.9 8-1.6V4.8c-3.9-.3-6.4.2-8 1.6z"/><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M12 6.4V19"/></svg>Read all poems</a>
+          <button class="btn btn--hero" id="surpriseBtn" type="button">Surprise me <span class="btn-star" aria-hidden="true">✦</span></button>
+        </div>
+      </div>
+      <div class="kantha-border" aria-hidden="true"></div>
+    </section>
+
+    <!-- ================= Poem of the day =================================== -->
+    <section class="potd wrap" id="potdWrap" hidden>
+      <h2 class="section-label"><span>Poem of the day</span></h2>
+      <div id="potd"></div>
+    </section>
+
+    <!-- ================= Controls + Poems ================================== -->
+    <section class="poems wrap" id="poems">
+      <h2 class="section-label"><span>The Poems</span></h2>
+      <div class="controls">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M21 21l-4.3-4.3M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
+          <input id="search" type="search" placeholder="Search poems, words, themes…" aria-label="Search poems" />
+        </div>
+        <div class="chips" id="langChips" role="group" aria-label="Filter by language"></div>
+        <div class="chips chips--themes" id="themeChips" role="group" aria-label="Filter by theme"></div>
+      </div>
+      <p class="result-count" id="resultCount" role="status" aria-live="polite"></p>
+      <div class="poem-grid" id="poemGrid"></div>
+      <p class="source-note" id="sourceNote" hidden></p>
+    </section>
+
+    <!-- ================= About ============================================= -->
+    <section class="about wrap" id="about">
+      <h2 class="section-label"><span>About</span></h2>
+      <div class="about-card">
+        <figure class="about-photo" id="aboutPhoto">
+          <div class="photo-frame">
+            <svg viewBox="0 0 120 120" class="photo-placeholder" aria-hidden="true"><use href="#motif-lotus"/></svg>
+          </div>
+          <figcaption id="aboutCaption"></figcaption>
+        </figure>
+        <div class="about-body">
+          <h3 id="aboutHeading">About the Poet</h3>
+          <div id="aboutText" class="about-prose"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Contact =========================================== -->
+    <section class="contact wrap" id="contact">
+      <h2 class="section-label"><span>Say Hello</span></h2>
+      <div class="contact-card">
+        <p>A favourite line, a memory it stirred, a warm thank you, or a business enquiry. Whatever brings you here, the poet would be delighted to hear from you.</p>
+        <div id="contactArea"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <svg class="footer-motif" viewBox="0 0 40 40" aria-hidden="true"><use href="#motif-paisley"/></svg>
+      <p>Made with love, care, and a little marigold.</p>
+      <p class="footer-fine">Poems © Mousumee Ghosh.</p>
+    </div>
+  </footer>
+
+  <!-- ================= Poem reader (modal) =============================== -->
+  <div class="reader" id="reader" hidden aria-hidden="true">
+    <div class="reader-scrim" data-close></div>
+    <div class="reader-stage">
+      <button class="reader-nav reader-prev" id="readerPrev" type="button" aria-label="Previous poem">‹</button>
+      <article class="reader-panel" role="dialog" aria-modal="true" aria-labelledby="readerTitle" tabindex="-1">
+        <button class="reader-close" data-close aria-label="Close">✕</button>
+        <div class="reader-content" id="readerContent"></div>
+      </article>
+      <button class="reader-nav reader-next" id="readerNext" type="button" aria-label="Next poem">›</button>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="translit.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

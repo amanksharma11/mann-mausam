@@ -1,0 +1,6 @@
+# OS / editor cruft — nothing else to ignore (this site has no build step)
+.DS_Store
+Thumbs.db
+desktop.ini
+*~
+.vscode/
