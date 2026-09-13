@@ -19,7 +19,11 @@
     stop: '<svg class="btn-i" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.6" fill="currentColor"/></svg>',
     spark:'<svg class="btn-i" viewBox="0 0 24 24"><path d="M12 2.5l1.9 6.1L20 10l-6.1 1.4L12 17.5 10.1 11.4 4 10l6.1-1.4z" fill="currentColor"/></svg>',
     share:'<svg class="btn-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="2.3"/><circle cx="18" cy="6" r="2.3"/><circle cx="18" cy="18" r="2.3"/><path d="M8.1 10.9l7.8-3.9M8.1 13.1l7.8 3.9"/></svg>',
-    copy: '<svg class="btn-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>'
+    copy: '<svg class="btn-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>',
+    // small badge icons: recording (music note), author translation (arrows), image (picture)
+    bAudio:'<svg class="badge-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17V4l10-1.6V15"/><ellipse cx="6.4" cy="17.4" rx="2.6" ry="2.1" fill="currentColor" stroke="none"/><ellipse cx="16.4" cy="15.4" rx="2.6" ry="2.1" fill="currentColor" stroke="none"/></svg>',
+    bTrans:'<svg class="badge-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13M14 5l3 3-3 3"/><path d="M20 16H7M10 13l-3 3 3 3"/></svg>',
+    bImg:'<svg class="badge-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="8.5" cy="10" r="1.7"/><path d="M4 17l4.5-4.5 3.5 3 3-3 5 5"/></svg>'
   };
 
   /* ----------------------------------------------------------------- SAMPLE
@@ -137,7 +141,8 @@
   }
 
   /* --------------------------------------------------------------- data load */
-  var POEMS=[], STATE={ q:"", lang:"all", theme:"all" };
+  var PAGE=24;   // how many poem cards to show before "Show more"
+  var POEMS=[], STATE={ q:"", lang:"all", theme:"all", attrs:[], shown:PAGE };
 
   function gvizUrl(id, tab){ return "https://docs.google.com/spreadsheets/d/"+encodeURIComponent(id)+"/gviz/tq?tqx=out:csv&sheet="+encodeURIComponent(tab||"Poems"); }
 
@@ -183,7 +188,13 @@
   function showSourceNote(html){ var n=$("#sourceNote"); n.innerHTML=html; n.hidden=false; }
   function hideSourceNote(){ $("#sourceNote").hidden=true; }
 
-  function afterLoad(){ buildChips(); renderPotd(); renderGrid(); refillBag(); routeFromHash(); }
+  // Share links key on the slug, so two poems must never share one. On a collision the
+  // later poem (in sorted order) gets -2, -3, … appended; the first keeps the clean slug.
+  function dedupeSlugs(){
+    var seen={};
+    POEMS.forEach(function(p){ var base=p.slug||"poem", s=base, n=2; while(seen[s]) s=base+"-"+(n++); p.slug=s; seen[s]=1; });
+  }
+  function afterLoad(){ dedupeSlugs(); buildChips(); renderPotd(); renderGrid(); refillBag(); routeFromHash(); }
 
   /* ------------------------------------------------------------------ chips */
   function uniq(a){ var s={},o=[]; a.forEach(function(x){ if(x&&!s[x]){s[x]=1;o.push(x);} }); return o; }
@@ -199,6 +210,12 @@
     themes=uniq(themes).slice(0,16);
     $("#themeChips").innerHTML=(themes.length?'<button class="chip'+(STATE.theme==="all"?" active":"")+'" data-tag="all">all themes</button>':"")+
       themes.map(function(t){ return '<button class="chip'+(STATE.theme===t?" active":"")+'" data-tag="'+esc(t)+'">'+tagLabel(t)+'</button>'; }).join("");
+    // attribute chips (combinable) -- only offered when at least one poem has that thing
+    var anyAudio=false,anyTrans=false,anyImg=false;
+    POEMS.forEach(function(p){ if(hasAudio(p))anyAudio=true; if(hasTranslation(p))anyTrans=true; if(hasImage(p))anyImg=true; });
+    var defs=[["rec","with recording",anyAudio],["trans","with translation",anyTrans],["img","with image",anyImg]];
+    var ac=$("#attrChips"); if(ac){ ac.innerHTML=defs.filter(function(d){return d[2];}).map(function(d){
+      return '<button class="chip'+(STATE.attrs.indexOf(d[0])>=0?" active":"")+'" data-attr="'+d[0]+'">'+d[1]+'</button>'; }).join(""); }
   }
 
   /* ------------------------------------------------------------------ grid */
@@ -206,9 +223,26 @@
     if(STATE.lang!=="all" && p.lang!==STATE.lang) return false;
     if(STATE.theme!=="all" && p.tags.indexOf(STATE.theme)<0) return false;
     if(STATE.q && p._hay.indexOf(STATE.q.toLowerCase())<0) return false;
+    // attribute filters (combinable): the poem must carry every selected one
+    for(var i=0;i<STATE.attrs.length;i++){ var a=STATE.attrs[i];
+      if(a==="rec" && !hasAudio(p)) return false;
+      if(a==="trans" && !hasTranslation(p)) return false;
+      if(a==="img" && !hasImage(p)) return false;
+    }
     return true;
   }
   function snippet(p){ return flatLines(p.stanzas).filter(function(l){return l.trim();}).slice(0,4).join("\n"); }
+  function hasAudio(p){ return !!(p.audio && String(p.audio).trim()); }
+  function hasTranslation(p){ return !!(p.translation && p.translation.en); }   // the poet's own translation (en poems have none)
+  function hasImage(p){ return !!(p.image && String(p.image).trim()); }
+  // do two stanza-arrays line up line-for-line? (used to decide author vs machine handling)
+  function sameShape(a,b){ if(!a||!b||a.length!==b.length) return false; for(var i=0;i<a.length;i++){ if(!a[i]||!b[i]||a[i].length!==b[i].length) return false; } return true; }
+  // "what this poem carries" badges, shown on cards and in the reader (no badge for transliteration)
+  function badges(p){
+    return (hasAudio(p)?'<span class="badge badge--rec">'+ICON.bAudio+'recording</span>':'')+
+           (hasTranslation(p)?'<span class="badge badge--trans">'+ICON.bTrans+'translation</span>':'')+
+           (hasImage(p)?'<span class="badge badge--img">'+ICON.bImg+'image</span>':'');
+  }
   function cardHTML(p){
     var r=romanTitle(p);
     return '<button class="poem-card lang-'+p.lang+' reveal" data-slug="'+esc(p.slug)+'">'+
@@ -218,16 +252,19 @@
       '<p class="snippet">'+esc(snippet(p))+'</p>'+
       '<div class="pc-foot">'+
         p.tags.slice(0,2).map(function(t){return '<span class="tag">'+tagLabel(t)+'</span>';}).join("")+
-        (p.audio?'<span class="has-audio">♪ recording</span>':'')+
+        badges(p)+
       '</div>'+
     '</button>';
   }
   function renderGrid(){
-    var list=POEMS.filter(matches), grid=$("#poemGrid"), rc=$("#resultCount");
-    rc.textContent = list.length? (list.length+(list.length===1?" poem":" poems")+(STATE.lang==="all"&&STATE.theme==="all"&&!STATE.q?" in the collection":" found")) : "";
-    if(!list.length){ grid.innerHTML='<p class="result-count">No poems match that. Try clearing the filters or the search.</p>'; return; }
-    grid.innerHTML=list.map(cardHTML).join("");
+    var list=POEMS.filter(matches), grid=$("#poemGrid"), rc=$("#resultCount"), more=$("#showMore");
+    var unfiltered = STATE.lang==="all" && STATE.theme==="all" && !STATE.q && !STATE.attrs.length;
+    rc.textContent = list.length? (list.length+(list.length===1?" poem":" poems")+(unfiltered?" in the collection":" found")) : "";
+    if(!list.length){ grid.innerHTML='<p class="result-count">No poems match that. Try clearing the filters or the search.</p>'; if(more) more.hidden=true; return; }
+    var shown=Math.min(STATE.shown, list.length);          // show in batches so 100+ poems stay light
+    grid.innerHTML=list.slice(0,shown).map(cardHTML).join("");
     observeReveals();
+    if(more){ if(shown<list.length){ more.hidden=false; more.textContent="Show more poems ("+(list.length-shown)+" more)"; } else more.hidden=true; }
   }
 
   /* ---------------------------------------------------------- poem of the day */
@@ -311,14 +348,16 @@
           '<button class="btn btn--sm" id="copyBtn" type="button">'+ICON.copy+'Copy</button></div>';
 
     return ''+
-      '<span class="r-lang lang-'+p.lang+'">'+esc(langName(p.lang))+(p.date?' · '+esc(formatDate(p.date)):'')+(p.audio?' · ♪ in her voice':'')+'</span>'+
+      '<span class="r-lang lang-'+p.lang+'">'+esc(langName(p.lang))+(p.date?' · '+esc(formatDate(p.date)):'')+'</span>'+
       '<h1 class="r-title lang-'+p.lang+'" id="readerTitle">'+esc(p.title)+'</h1>'+
       (romanLine?'<p class="r-roman">'+esc(romanLine)+'</p>':'')+
       (p.tags.length?'<div class="r-meta">'+p.tags.map(function(t){return '<span class="tag">'+tagLabel(t)+'</span>';}).join("")+'</div>':'')+
-      (p.image?'<img src="'+esc(p.image)+'" alt="" loading="lazy" style="border:2px solid var(--ink);border-radius:10px;margin-bottom:1.2rem">':'')+
+      (badges(p)?'<div class="r-badges">'+badges(p)+'</div>':'')+
       '<div class="poem-body lang-'+p.lang+'" id="poemBody">'+lines+'</div>'+
       (p.note?'<div class="r-note">'+esc(p.note)+'</div>':'')+
+      (hasImage(p)?'<figure class="r-image"><img alt="" loading="lazy" src="'+esc(p.image)+'"></figure>':'')+
       '<div class="r-tools">'+aids+acts+'</div>'+
+      '<div class="aid-notes"><p class="aid-note" id="sayNote" hidden></p><p class="aid-note" id="meanNote" hidden></p></div>'+
       '<p class="r-status" id="rStatus" role="status" aria-live="polite"></p>';
   }
   function formatDate(iso){ if(!iso) return ""; var d=new Date(iso.length===10?iso+"T00:00:00":iso); if(isNaN(d)) return iso; return d.toLocaleDateString(undefined,{year:"numeric",month:"long"}); }
@@ -328,6 +367,7 @@
     var lb=$("#listenBtn"); if(lb) lb.addEventListener("click",function(){ toggleListen(p,lb); });
     var sb=$("#shareBtn"); if(sb) sb.addEventListener("click",function(){ share(p,sb); });
     var cb=$("#copyBtn"); if(cb) cb.addEventListener("click",function(){ copyPoem(p,cb); });
+    var im=$(".r-image img"); if(im) im.addEventListener("error",function(){ var f=im.closest(".r-image"); if(f) f.remove(); });   // a bad image URL just disappears
   }
   function rstatus(msg,tone){ var s=$("#rStatus"); if(!s) return; s.textContent=msg||""; if(tone) s.setAttribute("data-tone",tone); else s.removeAttribute("data-tone"); }
   function setOn(b,on){ b.classList.toggle("is-on",on); b.setAttribute("aria-pressed",String(on)); }
@@ -335,34 +375,54 @@
   function strip(cls){ $$("#poemBody ."+cls).forEach(function(n){ n.remove(); }); }
 
   /* ---- reading aids: pronunciation + English meaning, appended per line ---- */
+  // Each aid has its own note (so they don't clobber each other, and each clears when
+  // its button is switched off). Recitation keeps the separate #rStatus line.
+  function aidNote(id,msg,tone){ var n=$("#"+id); if(!n) return; n.textContent=msg||""; n.hidden=!msg; if(tone) n.setAttribute("data-tone",tone); else n.removeAttribute("data-tone"); }
+  function removeMeanBlock(){ $$("#reader .aid-mean-block").forEach(function(n){ n.remove(); }); }
   function toggleAid(p, btn, kind){
     var on=btn.classList.contains("is-on");
-    if(kind==="say"){ if(on){ setOn(btn,false); strip("aid-say"); } else { setOn(btn,true); showSay(p); } }
-    else { if(on){ setOn(btn,false); strip("aid-mean"); } else { setOn(btn,true); showMeaning(p,btn); } }
+    if(kind==="say"){
+      if(on){ setOn(btn,false); strip("aid-say"); aidNote("sayNote",""); }
+      else { setOn(btn,true); showSay(p); }
+    } else {
+      if(on){ setOn(btn,false); strip("aid-mean"); removeMeanBlock(); aidNote("meanNote",""); }
+      else { setOn(btn,true); showMeaning(p,btn); }
+    }
   }
   function showSay(p){
     strip("aid-say");
+    // Use the poet's transliteration only if it lines up with the poem line-for-line;
+    // otherwise the machine romanises every line. Never mix the two.
+    var useAuthor = p.translit && sameShape(p.translit, p.stanzas);
     eachLine(function(el,s,l){
       var src=p.stanzas[s][l]; if(!src||!src.trim()) return;
-      var manual=p.translit && p.translit[s] && p.translit[s][l];
-      var span=document.createElement("span"); span.className="aid-say"; span.lang="en"; span.textContent=manual||T.line(src); el.appendChild(span);
+      var text = useAuthor ? (p.translit[s][l]||T.line(src)) : T.line(src);
+      var span=document.createElement("span"); span.className="aid-say"; span.lang="en"; span.textContent=text; el.appendChild(span);
     });
-    rstatus("Each line in English letters, following the sound rather than the spelling.");
+    aidNote("sayNote", "The poem written in English letters, so you can sound out the words and read it aloud even if the script is new to you.");
   }
   function showMeaning(p, btn){
-    strip("aid-mean");
+    strip("aid-mean"); removeMeanBlock();
     var stored=p.translation && p.translation.en;
     if(stored){
-      eachLine(function(el,s,l){ var t=stored[s]&&stored[s][l]; if(t){ var span=document.createElement("span"); span.className="aid-mean"; span.lang="en"; span.textContent=t; el.appendChild(span); } });
-      rstatus("Translated within the family, aiming at the sense rather than the music.");
+      // The poet's own translation. Per-line if it matches the poem; otherwise shown whole,
+      // below the poem -- never half author / half machine.
+      if(sameShape(stored, p.stanzas)){
+        eachLine(function(el,s,l){ var t=stored[s]&&stored[s][l]; if(t){ var span=document.createElement("span"); span.className="aid-mean"; span.lang="en"; span.textContent=t; el.appendChild(span); } });
+      } else {
+        var block=document.createElement("div"); block.className="aid-mean-block"; block.lang="en";
+        block.textContent=stored.map(function(st){ return st.join("\n"); }).join("\n\n");
+        var body=$("#poemBody"); body.parentNode.insertBefore(block, body.nextSibling);
+      }
+      aidNote("meanNote", "The poet's own English translation.");
       return;
     }
-    btn.disabled=true; rstatus("Translating…");
+    btn.disabled=true; aidNote("meanNote","Translating…");
     machineTranslate(p).then(function(map){
       eachLine(function(el,s,l){ var t=map[s+":"+l]; if(t){ var span=document.createElement("span"); span.className="aid-mean"; span.lang="en"; span.textContent=t; el.appendChild(span); } });
-      rstatus("Rough machine translation (MyMemory). Poetry resists it, so read it as a doorway, not the poem.");
+      aidNote("meanNote", "A rough machine translation (MyMemory), a doorway to the sense, not the poem.");
     }).catch(function(err){
-      setOn(btn,false); rstatus("Translation is unavailable just now. The free service caps how much it will do in a day."+(err&&err.message?" ("+err.message+")":""), "warn");
+      setOn(btn,false); aidNote("meanNote","Translation is unavailable just now. The free service caps how much it will do in a day."+(err&&err.message?" ("+err.message+")":""), "warn");
     }).then(function(){ btn.disabled=false; });
   }
   function machineTranslate(p){
@@ -392,7 +452,7 @@
     speakWithBrowser(p,b);
   }
   function stopListening(b){ speaking=false; if(b) setListenLabel(b,false); else { var lb=$("#listenBtn"); if(lb) setListenLabel(lb,false); }
-    if(audioEl){ audioEl.pause(); audioEl=null; } if(window.speechSynthesis) speechSynthesis.cancel(); if(keepAlive){ clearInterval(keepAlive); keepAlive=null; } }
+    if(audioEl){ audioEl.pause(); audioEl=null; } if(window.speechSynthesis) speechSynthesis.cancel(); if(keepAlive){ clearInterval(keepAlive); keepAlive=null; } rstatus(""); }
   function getVoices(){ return new Promise(function(resolve){ if(!window.speechSynthesis) return resolve([]); var v=speechSynthesis.getVoices(); if(v.length) return resolve(v);
     var settled=false; function done(){ if(settled)return; settled=true; clearInterval(poll); speechSynthesis.removeEventListener("voiceschanged",done); resolve(speechSynthesis.getVoices()); }
     speechSynthesis.addEventListener("voiceschanged",done); var poll=setInterval(function(){ if(speechSynthesis.getVoices().length) done(); },120); setTimeout(done,2500); }); }
@@ -602,12 +662,17 @@
       var nav=t.closest && t.closest(".site-nav a, .brand");
       if(nav){ if(!reader.hidden) hideReader(); return; } // let the anchor scroll
       var lc=t.closest && t.closest("[data-lang]");
-      if(lc){ STATE.lang=lc.getAttribute("data-lang"); syncChips("#langChips","data-lang",STATE.lang); renderGrid(); return; }
+      if(lc){ STATE.lang=lc.getAttribute("data-lang"); STATE.shown=PAGE; syncChips("#langChips","data-lang",STATE.lang); renderGrid(); return; }
       var tc=t.closest && t.closest("[data-tag]");
-      if(tc){ STATE.theme=tc.getAttribute("data-tag"); syncChips("#themeChips","data-tag",STATE.theme); renderGrid(); return; }
+      if(tc){ STATE.theme=tc.getAttribute("data-tag"); STATE.shown=PAGE; syncChips("#themeChips","data-tag",STATE.theme); renderGrid(); return; }
+      var ac=t.closest && t.closest("[data-attr]");
+      if(ac){ var a=ac.getAttribute("data-attr"), k=STATE.attrs.indexOf(a);   // combinable toggle
+        if(k>=0) STATE.attrs.splice(k,1); else STATE.attrs.push(a);
+        ac.classList.toggle("active"); STATE.shown=PAGE; renderGrid(); return; }
     });
 
-    $("#search").addEventListener("input", debounce(function(e){ STATE.q=e.target.value; renderGrid(); },180));
+    var sm=$("#showMore"); if(sm) sm.addEventListener("click", function(){ STATE.shown+=PAGE; renderGrid(); });
+    $("#search").addEventListener("input", debounce(function(e){ STATE.q=e.target.value; STATE.shown=PAGE; renderGrid(); },180));
     document.addEventListener("keydown", function(e){
       if(reader.hidden) return;
       if(e.key==="Escape") userClose();

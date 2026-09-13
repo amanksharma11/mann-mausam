@@ -352,6 +352,12 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 #langChips .chip { font-family: var(--f-type); font-size: .8rem; letter-spacing: .03em; text-transform: lowercase; }
 .chips--themes .chip.active { background: var(--terracotta); border-color: var(--terracotta-2); color: #fff5ea; }
 :root[data-theme="dark"] .chips--themes .chip.active { color:#1a1206; }
+/* attribute filters (with recording / translation / image) -- teal active, so they read as a distinct filter group */
+.chips--attrs .chip { font-size: .78rem; font-family: var(--f-type); letter-spacing: .03em; text-transform: lowercase; border-color: var(--line); }
+.chips--attrs .chip.active { background: var(--teal); border-color: var(--teal); color: #fff5ea; }
+:root[data-theme="dark"] .chips--attrs .chip.active { color:#10131c; }
+
+.show-more { display: block; margin: 1.6rem auto 0; }
 
 .result-count { color: var(--ink-soft); font-size: .9rem; margin: 0 0 1rem; min-height: 1.2em; }
 .source-note { margin-top: 1.4rem; font-size: .82rem; color: var(--ink-soft); border: 1.5px dashed var(--line); border-radius: var(--radius-sm); padding: .7rem 1rem; }
@@ -387,7 +393,12 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 .poem-card.lang-hi h3 { font-family: var(--f-hi-disp); } .poem-card.lang-hi .snippet { font-family: var(--f-hi); }
 .pc-foot { margin-top: .9rem; padding-top: .7rem; border-top: 1.5px dashed var(--line); display: flex; flex-wrap: wrap; gap: .4em; align-items: center; }
 .pc-foot .tag { font-size: .68rem; font-family: var(--f-type); color: var(--ink-soft); background: color-mix(in srgb, var(--marigold) 18%, transparent); padding: .16em .5em; border-radius: 999px; }
-.pc-foot .has-audio { color: var(--leaf); font-size: .72rem; }
+/* "what this poem carries" badges (recording / translation / image) -- cards + reader */
+.badge { display: inline-flex; align-items: center; gap: .3em; font-family: var(--f-type); font-size: .66rem; letter-spacing: .04em; color: var(--ink-soft); }
+.badge-i { width: 1.05em; height: 1.05em; flex: none; }
+.badge--rec { color: var(--leaf); } .badge--trans { color: var(--indigo); } .badge--img { color: var(--terracotta-2); }
+.r-badges { display: flex; flex-wrap: wrap; gap: 1em; margin: .3rem 0 1rem; }
+.r-badges .badge { font-size: .74rem; }
 
 /* ============================ About ====================================== */
 .about-card { display: grid; grid-template-columns: minmax(0, 15rem) 1fr; gap: clamp(1.4rem, 4vw, 2.6rem); align-items: start; background: var(--card); border: 2px solid var(--ink); border-radius: var(--radius); padding: clamp(1.4rem, 4vw, 2rem); box-shadow: var(--shadow-hard); }
@@ -478,8 +489,16 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 .stanza { margin: 0 0 1.6rem; } .stanza:last-child { margin-bottom: 0; }
 .line { margin: 0 0 .15rem; }
 .aid-say, .aid-mean { display: block; font-family: var(--f-body); }
-.aid-say  { font-size: .66em; font-style: italic; color: var(--leaf); line-height: 1.4; }
-.aid-mean { font-size: .7em; color: var(--indigo); line-height: 1.45; padding-left: .8rem; border-left: 2px solid var(--rose); margin-top: .1rem; }
+.aid-say  { font-size: .66em; font-style: italic; color: var(--leaf); line-height: 1.4; padding-left: .8rem; border-left: 2px solid var(--leaf); margin-top: .1rem; }
+.aid-mean { font-size: .7em; color: var(--indigo); line-height: 1.45; padding-left: .8rem; border-left: 2px solid var(--indigo); margin-top: .1rem; }
+/* each reading aid's own little caption (poet's vs machine); clears when the aid is off */
+.aid-note { margin: .5rem 0 0; font-size: .82rem; color: var(--ink-soft); }
+.aid-note[data-tone="warn"] { color: var(--terracotta-2); }
+/* the poet's translation when it doesn't map line-for-line: shown whole, below the poem */
+.aid-mean-block { margin: 1rem 0 0; padding: .8rem 1rem; border-left: 2px solid var(--indigo); background: color-mix(in srgb, var(--indigo) 7%, transparent); color: var(--indigo); font-family: var(--f-body); white-space: pre-line; line-height: 1.5; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+/* a poem's image: at the bottom, contained to a tidy box, aspect ratio kept */
+.r-image { margin: 1.5rem 0 0; text-align: center; }
+.r-image img { max-width: 100%; max-height: 340px; width: auto; height: auto; border: 2px solid var(--ink); border-radius: var(--radius-sm); }
 .r-note { margin-top: 1.2rem; padding: .8rem 1rem; border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--marigold) 10%, transparent); font-size: .92rem; color: var(--ink-soft); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
 
 .r-tools { display: grid; gap: 1rem; margin: 1.5rem 0 0; padding-top: 1.3rem; border-top: 1.5px dashed var(--line); }

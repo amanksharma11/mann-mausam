@@ -7,6 +7,21 @@
   <meta name="theme-color" content="#c1502e" />
   <title>Mann Mausam · Mousumee Ghosh</title>
 
+  <!-- Link preview (WhatsApp / social). Static hosting can't render a per-poem preview
+       (crawlers don't run the in-page router), so every shared link shows this site card. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Mann Mausam" />
+  <meta property="og:title" content="Mann Mausam · Poems by Mousumee Ghosh" />
+  <meta property="og:description" content="Poems by Mousumee Ghosh, in Bangla, Hindi and English. Read them, hear them, and carry them with you." />
+  <meta property="og:url" content="https://amanksharma11.github.io/mann-mausam/" />
+  <meta property="og:image" content="https://amanksharma11.github.io/mann-mausam/images/og-cover.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Mann Mausam · Poems by Mousumee Ghosh" />
+  <meta name="twitter:description" content="Poems by Mousumee Ghosh, in Bangla, Hindi and English." />
+  <meta name="twitter:image" content="https://amanksharma11.github.io/mann-mausam/images/og-cover.png" />
+
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -148,9 +163,11 @@
         </div>
         <div class="chips" id="langChips" role="group" aria-label="Filter by language"></div>
         <div class="chips chips--themes" id="themeChips" role="group" aria-label="Filter by theme"></div>
+        <div class="chips chips--attrs" id="attrChips" role="group" aria-label="Filter by what a poem has"></div>
       </div>
       <p class="result-count" id="resultCount" role="status" aria-live="polite"></p>
       <div class="poem-grid" id="poemGrid"></div>
+      <button class="btn btn--ghost show-more" id="showMore" type="button" hidden></button>
       <p class="source-note" id="sourceNote" hidden></p>
     </section>
 
