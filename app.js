@@ -555,8 +555,8 @@
     // Also print the address and link as readable text, so people can see (and copy) them
     // without having to click a button.
     var lines="";
-    if(mail) lines+='<p class="contact-line"><span class="contact-label">Email</span><a href="'+mailHref+'">'+esc(mail)+'</a></p>';
-    if(fb)   lines+='<p class="contact-line"><span class="contact-label">Facebook</span><a href="'+esc(fbLink(fb))+'" target="_blank" rel="noopener">'+esc(fbShow(fb))+'</a></p>';
+    if(mail) lines+='<p class="contact-line"><a href="'+mailHref+'">'+esc(mail)+'</a></p>';
+    if(fb)   lines+='<p class="contact-line"><a href="'+esc(fbLink(fb))+'" target="_blank" rel="noopener">'+esc(fbShow(fb))+'</a></p>';
     area.innerHTML = (out||lines)
       ? (out?'<div class="contact-actions">'+out+'</div>':'') + (lines?'<div class="contact-details">'+lines+'</div>':'')
       : '<p>Add a contact email or Facebook link in <code>config.js</code>.</p>';

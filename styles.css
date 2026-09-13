@@ -406,8 +406,7 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 .contact-actions { display: flex; flex-wrap: wrap; gap: .8rem; justify-content: center; margin-top: 1.1rem; }
 /* the address + link shown as plain readable text under the buttons, so people can see them without clicking */
 .contact-details { margin-top: 1.1rem; display: grid; gap: .35rem; justify-items: center; }
-.contact-line { margin: 0; display: flex; align-items: baseline; gap: .5em; flex-wrap: wrap; justify-content: center; font-size: .95rem; }
-.contact-label { font-family: var(--f-type); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); }
+.contact-line { margin: 0; font-size: .98rem; }
 .contact-details a { color: var(--terracotta-2); text-decoration: underline; word-break: break-word; }
 :root[data-theme="dark"] .contact-details a { color: var(--terracotta); }
 .contact-form { display: grid; gap: .8rem; max-width: 460px; margin: 1rem auto 0; text-align: left; }
