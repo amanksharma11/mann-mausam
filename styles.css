@@ -357,9 +357,16 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 .chips--attrs .chip.active { background: var(--teal); border-color: var(--teal); color: #fff5ea; }
 :root[data-theme="dark"] .chips--attrs .chip.active { color:#10131c; }
 
+/* the hidden attribute must always win over a class's display (e.g. .btn/.show-more),
+   or a toggled-off button lingers as an empty pill */
+[hidden] { display: none !important; }
 .show-more { display: block; margin: 1.6rem auto 0; }
 
 .result-count { color: var(--ink-soft); font-size: .9rem; margin: 0 0 1rem; min-height: 1.2em; }
+/* empty state: one prominent line + a one-tap way back to the full collection */
+.no-results { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .8rem 1.1rem; text-align: center; padding: 2.4rem 1rem; }
+.no-results-msg { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: 1.15rem; color: var(--ink); }
+.no-results .btn { flex: none; }
 .source-note { margin-top: 1.4rem; font-size: .82rem; color: var(--ink-soft); border: 1.5px dashed var(--line); border-radius: var(--radius-sm); padding: .7rem 1rem; }
 
 /* ============================ Poem grid =================================== */
@@ -391,13 +398,18 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 .poem-card .snippet { color: var(--ink-soft); margin: 0; flex: 1; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-line; }
 .poem-card.lang-bn h3 { font-family: var(--f-bn-disp); } .poem-card.lang-bn .snippet { font-family: var(--f-bn); }
 .poem-card.lang-hi h3 { font-family: var(--f-hi-disp); } .poem-card.lang-hi .snippet { font-family: var(--f-hi); }
-.pc-foot { margin-top: .9rem; padding-top: .7rem; border-top: 1.5px dashed var(--line); display: flex; flex-wrap: wrap; gap: .4em; align-items: center; }
+.pc-foot { margin-top: .9rem; padding-top: .7rem; border-top: 1.5px dashed var(--line); display: flex; flex-direction: column; align-items: flex-start; gap: .45em; }
+.pc-tags, .pc-badges { display: flex; flex-wrap: wrap; gap: .4em; align-items: center; }
 .pc-foot .tag { font-size: .68rem; font-family: var(--f-type); color: var(--ink-soft); background: color-mix(in srgb, var(--marigold) 18%, transparent); padding: .16em .5em; border-radius: 999px; }
-/* "what this poem carries" badges (recording / translation / image) -- cards + reader */
-.badge { display: inline-flex; align-items: center; gap: .3em; font-family: var(--f-type); font-size: .66rem; letter-spacing: .04em; color: var(--ink-soft); }
+/* "what this poem carries" badges (recording / translation / image) -- cards + reader.
+   Pill-shaped like the text tags, but tinted with each badge's own colour so the
+   recording / translation / image coding still reads at a glance. */
+.badge { display: inline-flex; align-items: center; gap: .3em; font-family: var(--f-type); font-size: .66rem; letter-spacing: .04em; color: var(--ink-soft); padding: .16em .55em; border-radius: 999px; }
 .badge-i { width: 1.05em; height: 1.05em; flex: none; }
-.badge--rec { color: var(--leaf); } .badge--trans { color: var(--indigo); } .badge--img { color: var(--terracotta-2); }
-.r-badges { display: flex; flex-wrap: wrap; gap: 1em; margin: .3rem 0 1rem; }
+.badge--rec { color: var(--leaf); background: color-mix(in srgb, var(--leaf) 15%, transparent); }
+.badge--trans { color: var(--indigo); background: color-mix(in srgb, var(--indigo) 15%, transparent); }
+.badge--img { color: var(--terracotta-2); background: color-mix(in srgb, var(--terracotta-2) 15%, transparent); }
+.r-badges { display: flex; flex-wrap: wrap; gap: .45em; margin: .3rem 0 1rem; }
 .r-badges .badge { font-size: .74rem; }
 
 /* ============================ About ====================================== */
@@ -417,7 +429,8 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 .contact-actions { display: flex; flex-wrap: wrap; gap: .8rem; justify-content: center; margin-top: 1.1rem; }
 /* contact buttons carry a small translucent label on top and the real address/link below,
    so the contact reads clearly without clicking -- no separate hyperlinks needed */
-.btn--contact { text-align: left; padding: .5em 1.15em; }
+.btn--contact { text-align: left; padding: .5em 1.15em; gap: .65em; }
+.btn--contact .btn-i { width: 1.7em; height: 1.7em; }
 .btn-contact-text { display: inline-flex; flex-direction: column; line-height: 1.2; }
 .btn-contact-label { font-family: var(--f-type); font-size: .58rem; letter-spacing: .14em; text-transform: uppercase; opacity: .5; }
 .btn-contact-value { font-size: .95em; }
@@ -468,10 +481,10 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 
 /* the poem's per-language corner motif, carried into the popup (behind the text) */
 .reader-content { position: relative; z-index: 1; }
-.reader-panel::after { content: ""; position: absolute; right: 12px; bottom: 12px; width: 96px; height: 96px; background: currentColor; opacity: .1; z-index: 0; pointer-events: none; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: right bottom; mask-position: right bottom; -webkit-mask-size: contain; mask-size: contain; }
-.reader-panel.lang-bn::after { color: var(--teal); -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='10.2 9.5 26.3 22.7'%3E%3Cpath d='M24 9.5c4.1 3.7 6.1 7.8 6.1 11.7 0 4.1-2.7 7-6.1 7s-6.1-2.9-6.1-7c0-3.9 2-8 6.1-11.7z'/%3E%3Cpath d='M11.8 16.4c4.9 1.4 8 4.1 9.5 7.4 1.6 3.4.7 6.9-2.1 8-2.9 1.2-6-.5-7.5-3.9-1.5-3.2-1.8-7.3-1.2-11.5z'/%3E%3Cpath d='M36.2 16.4c.6 4.2.3 8.3-1.2 11.5-1.5 3.4-4.6 5.1-7.5 3.9-2.8-1.1-3.7-4.6-2.1-8 1.5-3.3 4.6-6 9.5-7.4z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='10.2 9.5 26.3 22.7'%3E%3Cpath d='M24 9.5c4.1 3.7 6.1 7.8 6.1 11.7 0 4.1-2.7 7-6.1 7s-6.1-2.9-6.1-7c0-3.9 2-8 6.1-11.7z'/%3E%3Cpath d='M11.8 16.4c4.9 1.4 8 4.1 9.5 7.4 1.6 3.4.7 6.9-2.1 8-2.9 1.2-6-.5-7.5-3.9-1.5-3.2-1.8-7.3-1.2-11.5z'/%3E%3Cpath d='M36.2 16.4c.6 4.2.3 8.3-1.2 11.5-1.5 3.4-4.6 5.1-7.5 3.9-2.8-1.1-3.7-4.6-2.1-8 1.5-3.3 4.6-6 9.5-7.4z'/%3E%3C/svg%3E"); }
-.reader-panel.lang-hi::after { color: var(--terracotta); -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='9.2 2 29.9 34.8'%3E%3Cpath d='M20 2 C40 2 46 24 30 34 C18 41 6 34 10 22 C13 13 24 14 24 22'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='9.2 2 29.9 34.8'%3E%3Cpath d='M20 2 C40 2 46 24 30 34 C18 41 6 34 10 22 C13 13 24 14 24 22'/%3E%3C/svg%3E"); }
-.reader-panel.lang-en::after { color: var(--indigo); -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='3 3 42 42'%3E%3Cpath d='M24 3 C25 14 34 23 45 24 C34 25 25 34 24 45 C23 34 14 25 3 24 C14 23 23 14 24 3 Z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='3 3 42 42'%3E%3Cpath d='M24 3 C25 14 34 23 45 24 C34 25 25 34 24 45 C23 34 14 25 3 24 C14 23 23 14 24 3 Z'/%3E%3C/svg%3E"); }
+.reader-content::after { content: ""; position: absolute; right: 12px; bottom: 12px; width: 96px; height: 96px; background: currentColor; opacity: .1; z-index: -1; pointer-events: none; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: right bottom; mask-position: right bottom; -webkit-mask-size: contain; mask-size: contain; }
+.reader-panel.lang-bn .reader-content::after { color: var(--teal); -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='10.2 9.5 26.3 22.7'%3E%3Cpath d='M24 9.5c4.1 3.7 6.1 7.8 6.1 11.7 0 4.1-2.7 7-6.1 7s-6.1-2.9-6.1-7c0-3.9 2-8 6.1-11.7z'/%3E%3Cpath d='M11.8 16.4c4.9 1.4 8 4.1 9.5 7.4 1.6 3.4.7 6.9-2.1 8-2.9 1.2-6-.5-7.5-3.9-1.5-3.2-1.8-7.3-1.2-11.5z'/%3E%3Cpath d='M36.2 16.4c.6 4.2.3 8.3-1.2 11.5-1.5 3.4-4.6 5.1-7.5 3.9-2.8-1.1-3.7-4.6-2.1-8 1.5-3.3 4.6-6 9.5-7.4z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='10.2 9.5 26.3 22.7'%3E%3Cpath d='M24 9.5c4.1 3.7 6.1 7.8 6.1 11.7 0 4.1-2.7 7-6.1 7s-6.1-2.9-6.1-7c0-3.9 2-8 6.1-11.7z'/%3E%3Cpath d='M11.8 16.4c4.9 1.4 8 4.1 9.5 7.4 1.6 3.4.7 6.9-2.1 8-2.9 1.2-6-.5-7.5-3.9-1.5-3.2-1.8-7.3-1.2-11.5z'/%3E%3Cpath d='M36.2 16.4c.6 4.2.3 8.3-1.2 11.5-1.5 3.4-4.6 5.1-7.5 3.9-2.8-1.1-3.7-4.6-2.1-8 1.5-3.3 4.6-6 9.5-7.4z'/%3E%3C/svg%3E"); }
+.reader-panel.lang-hi .reader-content::after { color: var(--terracotta); -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='9.2 2 29.9 34.8'%3E%3Cpath d='M20 2 C40 2 46 24 30 34 C18 41 6 34 10 22 C13 13 24 14 24 22'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='9.2 2 29.9 34.8'%3E%3Cpath d='M20 2 C40 2 46 24 30 34 C18 41 6 34 10 22 C13 13 24 14 24 22'/%3E%3C/svg%3E"); }
+.reader-panel.lang-en .reader-content::after { color: var(--indigo); -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='3 3 42 42'%3E%3Cpath d='M24 3 C25 14 34 23 45 24 C34 25 25 34 24 45 C23 34 14 25 3 24 C14 23 23 14 24 3 Z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='3 3 42 42'%3E%3Cpath d='M24 3 C25 14 34 23 45 24 C34 25 25 34 24 45 C23 34 14 25 3 24 C14 23 23 14 24 3 Z'/%3E%3C/svg%3E"); }
 
 .r-lang { font-family: var(--f-type); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--terracotta-2); }
 .r-lang.lang-bn { color: var(--teal); } .r-lang.lang-hi { color: var(--terracotta-2); } .r-lang.lang-en { color: var(--indigo); }

@@ -251,8 +251,8 @@
       (r?'<span class="roman">'+esc(r)+'</span>':'')+
       '<p class="snippet">'+esc(snippet(p))+'</p>'+
       '<div class="pc-foot">'+
-        p.tags.slice(0,2).map(function(t){return '<span class="tag">'+tagLabel(t)+'</span>';}).join("")+
-        badges(p)+
+        (p.tags.length?'<div class="pc-tags">'+p.tags.slice(0,2).map(function(t){return '<span class="tag">'+tagLabel(t)+'</span>';}).join("")+'</div>':'')+
+        (badges(p)?'<div class="pc-badges">'+badges(p)+'</div>':'')+
       '</div>'+
     '</button>';
   }
@@ -260,11 +260,21 @@
     var list=POEMS.filter(matches), grid=$("#poemGrid"), rc=$("#resultCount"), more=$("#showMore");
     var unfiltered = STATE.lang==="all" && STATE.theme==="all" && !STATE.q && !STATE.attrs.length;
     rc.textContent = list.length? (list.length+(list.length===1?" poem":" poems")+(unfiltered?" in the collection":" found")) : "";
-    if(!list.length){ grid.innerHTML='<p class="result-count">No poems match that. Try clearing the filters or the search.</p>'; if(more) more.hidden=true; return; }
+    if(!list.length){ grid.innerHTML='<div class="no-results"><p class="no-results-msg">No poems match these filters.</p><button class="btn btn--sm" id="clearFilters" type="button">Clear all filters</button></div>'; if(more) more.hidden=true; return; }
     var shown=Math.min(STATE.shown, list.length);          // show in batches so 100+ poems stay light
     grid.innerHTML=list.slice(0,shown).map(cardHTML).join("");
     observeReveals();
     if(more){ if(shown<list.length){ more.hidden=false; more.textContent="Show more poems ("+(list.length-shown)+" more)"; } else more.hidden=true; }
+  }
+  // Reset every filter back to the home view: all languages, all themes, no attribute
+  // filters, no search.
+  function clearAllFilters(){
+    STATE.lang="all"; STATE.theme="all"; STATE.attrs=[]; STATE.q=""; STATE.shown=PAGE;
+    var s=$("#search"); if(s) s.value="";
+    syncChips("#langChips","data-lang","all");
+    syncChips("#themeChips","data-tag","all");
+    $$("#attrChips [data-attr]").forEach(function(c){ c.classList.remove("active"); c.setAttribute("aria-pressed","false"); });
+    renderGrid();
   }
 
   /* ---------------------------------------------------------- poem of the day */
@@ -438,15 +448,19 @@
   }
 
   /* ---- recitation: her recording if present, else the device voice ---- */
-  var speaking=false, keepAlive=null, audioEl=null;
+  var speaking=false, keepAlive=null, audioEl=null, curUtter=null;
   function setListenLabel(b,on){ b.innerHTML=on?(ICON.stop+"Stop"):(ICON.play+"Recite"); b.classList.toggle("reciting",on); setOn(b,on); }
   function toggleListen(p,b){
     if(speaking){ stopListening(b); return; }
     if(p.audio){
+      // A bad audio URL can fire BOTH the error event and a play() rejection; this guard
+      // makes sure we fall back to the device voice only once.
+      var fellBack=false;
+      function fallback(){ if(fellBack) return; fellBack=true; if(audioEl){ audioEl.pause(); audioEl=null; } speakWithBrowser(p,b,true); }
       audioEl=new Audio(p.audio);
       audioEl.addEventListener("ended",function(){ stopListening(b); });
-      audioEl.addEventListener("error",function(){ rstatus("That recording wouldn't play, so using the device voice instead.","warn"); speakWithBrowser(p,b); });
-      audioEl.play().then(function(){ speaking=true; setListenLabel(b,true); rstatus("In her own voice."); }).catch(function(){ speakWithBrowser(p,b); });
+      audioEl.addEventListener("error",fallback);
+      audioEl.play().then(function(){ if(fellBack) return; speaking=true; setListenLabel(b,true); rstatus("In her own voice."); }).catch(fallback);
       return;
     }
     speakWithBrowser(p,b);
@@ -460,18 +474,31 @@
     var hits=voices.filter(function(v){ return v.lang.toLowerCase().replace("_","-").indexOf(want)===0; });
     if(!hits.length && lang==="en") return voices[0]||null; if(!hits.length) return null;
     var local=hits.filter(function(v){return v.localService;}); return local[0]||hits[0]; }
-  function speakWithBrowser(p,b){
-    if(!window.speechSynthesis){ rstatus("This browser can't read text aloud. Chrome on Android or Edge on Windows can.","warn"); return; }
+  function speakWithBrowser(p,b,fromFallback){
+    if(!window.speechSynthesis){ rstatus("This browser can't read text aloud. Chrome on Android or Edge on Windows can.","warn"); stopListening(b); return; }
     rstatus("Finding a voice…");
     getVoices().then(function(voices){
       var voice=pickVoice(voices,p.lang);
-      if(!voice){ rstatus(noVoiceHelp(p.lang),"warn"); return; }
+      if(!voice){ rstatus(noVoiceHelp(p.lang),"warn"); stopListening(b); return; }
       var chunks=flatLines(p.stanzas).filter(function(l){return l&&l.trim();});
+      if(!chunks.length){ stopListening(b); return; }
       var rate=$("#rate"); var rv=rate?parseFloat(rate.value):0.86;
       speechSynthesis.cancel(); speaking=true; setListenLabel(b,true);
-      rstatus("Read by the "+voice.name+" voice on this device.");
-      chunks.forEach(function(text,i){ var u=new SpeechSynthesisUtterance(text); u.voice=voice; u.lang=voice.lang; u.rate=rv;
-        if(i===chunks.length-1) u.onend=function(){ stopListening(b); }; u.onerror=function(){ stopListening(b); }; speechSynthesis.speak(u); });
+      rstatus((fromFallback?"That recording wouldn't play, so it's read by the ":"Read by the ")+voice.name+" voice on this device.");
+      // Speak one line at a time, kicking off the next from each line's onend, and keep a
+      // reference to the live utterance. Chrome drops queued utterances (only the first line
+      // plays) and garbage-collects unreferenced ones; this drives the sequence reliably.
+      var idx=0;
+      function next(){
+        if(!speaking) return;
+        if(idx>=chunks.length){ stopListening(b); return; }
+        var u=new SpeechSynthesisUtterance(chunks[idx]); u.voice=voice; u.lang=voice.lang; u.rate=rv;
+        u.onend=function(){ idx++; next(); };
+        u.onerror=function(){ idx++; next(); };   // skip a line that won't speak, carry on
+        curUtter=u;
+        speechSynthesis.speak(u);
+      }
+      next();
       if(keepAlive) clearInterval(keepAlive);
       keepAlive=setInterval(function(){ if(!speaking){ clearInterval(keepAlive); keepAlive=null; return; }
         if(speechSynthesis.speaking && !speechSynthesis.paused){ speechSynthesis.pause(); speechSynthesis.resume(); } },9000);
@@ -656,6 +683,7 @@
 
     document.addEventListener("click", function(e){
       var t=e.target;
+      if(t.closest && t.closest("#clearFilters")){ clearAllFilters(); return; }
       var card=t.closest && t.closest("[data-slug]");
       if(card){ openPoem(card.getAttribute("data-slug")); return; }
       if(t.closest && t.closest("[data-close]")){ userClose(); return; }
