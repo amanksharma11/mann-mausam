@@ -212,9 +212,10 @@
     <div class="reader-stage">
       <button class="reader-nav reader-prev" id="readerPrev" type="button" aria-label="Previous poem">‹</button>
       <article class="reader-panel" role="dialog" aria-modal="true" aria-labelledby="readerTitle" tabindex="-1">
-        <button class="reader-close" data-close aria-label="Close">✕</button>
         <div class="reader-content" id="readerContent"></div>
       </article>
+      <!-- close sits on the stage (not inside the scrolling panel) so it stays pinned -->
+      <button class="reader-close" data-close aria-label="Close">✕</button>
       <button class="reader-nav reader-next" id="readerNext" type="button" aria-label="Next poem">›</button>
     </div>
   </div>

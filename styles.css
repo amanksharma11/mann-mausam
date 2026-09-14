@@ -466,9 +466,6 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 .btn-contact-text { display: inline-flex; flex-direction: column; line-height: 1.2; }
 .btn-contact-label { font-family: var(--f-type); font-size: .58rem; letter-spacing: .14em; text-transform: uppercase; opacity: .5; }
 .btn-contact-value { font-size: .95em; }
-.contact-form { display: grid; gap: .8rem; max-width: 460px; margin: 1rem auto 0; text-align: left; }
-.contact-form input, .contact-form textarea { font: inherit; padding: .7em .9em; border-radius: var(--radius-sm); border: 2px solid var(--line); background: var(--paper); color: var(--ink); }
-.contact-form textarea { min-height: 120px; resize: vertical; }
 
 /* ============================ Footer ====================================== */
 .site-footer { margin-top: 4rem; border-top: 2px solid var(--line); background: color-mix(in srgb, var(--paper-2) 60%, transparent); }
@@ -485,7 +482,7 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
    title/tags never leave the top and the tools never leave the bottom -- only the poem
    scrolls between them. Vertical padding lives on the head/foot, not the panel, so the
    pinned bands cover the scrolling poem cleanly. */
-.reader-panel { position: relative; width: 100%; max-height: 92dvh; overflow: auto; overflow-anchor: none; background: var(--card); border: 2px solid var(--ink); border-radius: var(--radius); box-shadow: var(--shadow-hard); padding: 0 clamp(1.4rem, 4vw, 2.6rem); animation: rise .3s cubic-bezier(.2,.8,.2,1); }
+.reader-panel { position: relative; width: 100%; max-height: 92vh; max-height: 92dvh; overflow: auto; overflow-anchor: none; background: var(--card); border: 2px solid var(--ink); border-radius: var(--radius); box-shadow: var(--shadow-hard); padding: 0 clamp(1.4rem, 4vw, 2.6rem); animation: rise .3s cubic-bezier(.2,.8,.2,1); }
 .r-head { position: sticky; top: 0; z-index: 3; background: var(--card); padding: clamp(1.3rem, 3.5vw, 2.1rem) 0 .7rem; }
 .r-scroll { padding: .2rem 0 .4rem; }
 .r-foot { position: sticky; bottom: 0; z-index: 3; background: var(--card); padding: .9rem 0 clamp(1.2rem, 3.5vw, 2rem); border-top: 1.5px dashed var(--line); }
@@ -537,7 +534,7 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 .r-meta .tag { font-family: var(--f-type); background: color-mix(in srgb, var(--marigold) 18%, transparent); padding: .15em .55em; border-radius: 999px; }
 
 /* poem body with per-line reading aids appended beneath each line */
-.poem-body { font-size: clamp(1.15rem, 1rem + 1vw, 1.5rem); margin: 0; }
+.poem-body { font-size: clamp(1.15rem, 1rem + 1vw, 1.5rem); margin: 0; overflow-wrap: anywhere; }
 .poem-body.lang-bn { font-family: var(--f-bn); } .poem-body.lang-hi { font-family: var(--f-hi); }
 .stanza { margin: 0 0 1.6rem; } .stanza:last-child { margin-bottom: 0; }
 .line { margin: 0 0 .15rem; }
@@ -551,13 +548,13 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 .aid-note[data-tone="poet"],   .r-status[data-tone="poet"]    { color: var(--c-poet); }
 .aid-note[data-tone="machine"],.r-status[data-tone="machine"] { color: var(--c-machine); }
 /* the poet's translation when it doesn't map line-for-line: shown whole, below the poem */
-.aid-mean-block { margin: 1rem 0 0; padding: .8rem 1rem; border-left: 2px solid var(--c-translation); background: color-mix(in srgb, var(--c-translation) 7%, transparent); color: var(--c-translation); font-family: var(--f-body); white-space: pre-line; line-height: 1.5; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+.aid-mean-block { margin: 1rem 0 0; padding: .8rem 1rem; border-left: 2px solid var(--c-translation); background: color-mix(in srgb, var(--c-translation) 7%, transparent); color: var(--c-translation); font-family: var(--f-body); white-space: pre-line; overflow-wrap: anywhere; line-height: 1.5; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
 /* the poet's transliteration when it doesn't map line-for-line: shown whole, below the poem */
-.aid-say-block { margin: 1rem 0 0; padding: .8rem 1rem; border-left: 2px solid var(--c-transliteration); background: color-mix(in srgb, var(--c-transliteration) 7%, transparent); color: var(--c-transliteration); font-family: var(--f-body); font-style: italic; white-space: pre-line; line-height: 1.5; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+.aid-say-block { margin: 1rem 0 0; padding: .8rem 1rem; border-left: 2px solid var(--c-transliteration); background: color-mix(in srgb, var(--c-transliteration) 7%, transparent); color: var(--c-transliteration); font-family: var(--f-body); font-style: italic; white-space: pre-line; overflow-wrap: anywhere; line-height: 1.5; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
 /* a poem's image: at the bottom, contained to a tidy box, aspect ratio kept */
 .r-image { margin: 1.5rem 0 0; text-align: center; }
 .r-image img { max-width: 100%; max-height: 340px; width: auto; height: auto; border: 2px solid var(--ink); border-radius: var(--radius-sm); }
-.r-note { margin-top: 1.2rem; padding: .8rem 1rem; border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--marigold) 10%, transparent); font-size: .92rem; color: var(--ink-soft); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+.r-note { margin-top: 1.2rem; padding: .8rem 1rem; border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--marigold) 10%, transparent); font-size: .92rem; color: var(--ink-soft); overflow-wrap: anywhere; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
 
 .r-tools { display: grid; gap: 1rem; }
 .tool-group { display: flex; flex-wrap: wrap; gap: .55rem; align-items: center; }
@@ -577,6 +574,32 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 .reveal { opacity: 0; transform: translateY(20px); transition: opacity .55s ease, transform .55s ease; }
 .reveal.in { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } .reader-scrim, .reader-panel { animation: none; } }
+
+/* ---- mobile / touch tuning ---------------------------------------------- */
+/* Phones: condense the reader so the poem keeps usable room between the pinned
+   header and footer. */
+@media (max-width: 560px) {
+  .r-head { padding: 1.05rem 0 .55rem; }
+  .r-foot { padding: .75rem 0 1rem; }
+  .r-title { font-size: clamp(1.45rem, 6.4vw, 1.9rem); }
+  .r-tools { gap: .8rem; }
+  .r-badges { margin: .3rem 0 .6rem; }
+  .r-meta { margin: .6rem 0 .7rem; }
+}
+/* Short screens (landscape phones): the header + footer together are taller than
+   the popup, so stop pinning the header -- let it scroll and keep only the footer
+   (and the close button) fixed, so nothing overlaps. */
+@media (max-height: 600px) {
+  .r-head { position: static; }
+}
+/* Touch devices: give controls a finger-sized hit area (~44px). */
+@media (hover: none) {
+  .btn--sm { min-height: 42px; }
+  .chip { min-height: 40px; display: inline-flex; align-items: center; }
+  .site-nav a { min-height: 40px; display: inline-flex; align-items: center; }
+  .reader-nav { width: 44px; height: 44px; }
+  .reader-close { width: 44px; height: 44px; font-size: 1.05rem; }
+}
 
 /* ---- print --------------------------------------------------------------- */
 @media print {
