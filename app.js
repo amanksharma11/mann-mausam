@@ -335,7 +335,7 @@
     document.body.style.overflow="hidden";
     var panel=$(".reader-panel"); panel.className="reader-panel lang-"+p.lang;   // per-language corner motif
     reader.className="reader lang-"+p.lang;   // drives the per-language button highlight colour
-    panel.scrollTop=0; panel.focus();
+    var sc=$("#reader .r-scroll"); if(sc) sc.scrollTop=0; panel.focus();
     wireReader(p);
     if(push!==false) history.pushState({p:slug},"", "#/poem/"+slug);
   }
@@ -364,21 +364,21 @@
           '<button class="btn btn--sm" id="copyBtn" type="button">'+ICON.copy+'Copy</button></div>';
 
     return ''+
-      // pinned top: language, title, tags, badges
-      '<div class="r-head">'+
-        '<span class="r-lang lang-'+p.lang+'">'+esc(langName(p.lang))+(p.date?' · '+esc(formatDate(p.date)):'')+'</span>'+
-        '<h1 class="r-title lang-'+p.lang+'" id="readerTitle">'+esc(p.title)+'</h1>'+
-        (romanLine?'<p class="r-roman">'+esc(romanLine)+'</p>':'')+
-        (p.tags.length?'<div class="r-meta">'+p.tags.map(function(t){return '<span class="tag">'+tagLabel(t)+'</span>';}).join("")+'</div>':'')+
-        (badges(p)?'<div class="r-badges">'+badges(p)+'</div>':'')+
-      '</div>'+
-      // scrolling middle: the poem itself (plus any note/image)
+      // the scrolling region: header (sticky on desktop, scrolls on phones) + the poem.
+      // Only this scrolls; its top/bottom edges are faded so half-cut lines don't peek.
       '<div class="r-scroll">'+
+        '<div class="r-head">'+
+          '<span class="r-lang lang-'+p.lang+'">'+esc(langName(p.lang))+(p.date?' · '+esc(formatDate(p.date)):'')+'</span>'+
+          '<h1 class="r-title lang-'+p.lang+'" id="readerTitle">'+esc(p.title)+'</h1>'+
+          (romanLine?'<p class="r-roman">'+esc(romanLine)+'</p>':'')+
+          (p.tags.length?'<div class="r-meta">'+p.tags.map(function(t){return '<span class="tag">'+tagLabel(t)+'</span>';}).join("")+'</div>':'')+
+          (badges(p)?'<div class="r-badges">'+badges(p)+'</div>':'')+
+        '</div>'+
         '<div class="poem-body lang-'+p.lang+'" id="poemBody">'+lines+'</div>'+
         (p.note?'<div class="r-note">'+esc(p.note)+'</div>':'')+
         (hasImage(p)?'<figure class="r-image"><img alt="" loading="lazy" src="'+esc(p.image)+'"></figure>':'')+
       '</div>'+
-      // pinned bottom: the tools, the aid captions, and the recite status
+      // fixed bottom bar: tools, aid captions, recite status
       '<div class="r-foot">'+
         '<div class="r-tools">'+aids+acts+'</div>'+
         '<div class="aid-notes"><p class="aid-note" id="sayNote" hidden></p><p class="aid-note" id="meanNote" hidden></p></div>'+
@@ -396,11 +396,11 @@
   }
   function rstatus(msg,tone){ var s=$("#rStatus"); if(!s) return; s.textContent=msg||""; if(tone) s.setAttribute("data-tone",tone); else s.removeAttribute("data-tone"); }
   // reading the popup back to the top (most tools) or down to a spot (a bulk translation)
-  function scrollReaderTop(){ var pl=$(".reader-panel"); if(pl) pl.scrollTop=0; }
-  function scrollReaderTo(el){ var pl=$(".reader-panel"), hd=$("#reader .r-head"); if(!pl||!el) return;
+  function scrollReaderTop(){ var pl=$("#reader .r-scroll"); if(pl) pl.scrollTop=0; }
+  function scrollReaderTo(el){ var pl=$("#reader .r-scroll"), hd=$("#reader .r-head"); if(!pl||!el) return;
     // only offset for the header when it's actually pinned (on phones it scrolls away)
     var stick = (hd && getComputedStyle(hd).position==="sticky") ? hd.offsetHeight : 0;
-    var top = el.getBoundingClientRect().top - pl.getBoundingClientRect().top + pl.scrollTop - stick - 10;
+    var top = el.getBoundingClientRect().top - pl.getBoundingClientRect().top + pl.scrollTop - stick - 12;
     pl.scrollTop = Math.max(0, top); }
   function setOn(b,on){ b.classList.toggle("is-on",on); b.setAttribute("aria-pressed",String(on)); }
   function eachLine(fn){ $$("#poemBody .line").forEach(function(el){ fn(el, +el.dataset.s, +el.dataset.l); }); }
@@ -440,7 +440,7 @@
     // otherwise the site romanises every line. Never mix the two.
     if(p.translit && !sameShape(p.translit, p.stanzas)){
       var block=mountBlock("aid-say-block", p.translit);
-      aidNote("sayNote", "The poet's own transliteration, shown in full below.", "poet");
+      aidNote("sayNote", "The poet's own transliteration, shown in full below.", "translit");
       scrollReaderTo(block);
       return;
     }
@@ -450,8 +450,8 @@
       var text = useAuthor ? ((p.translit[s]&&p.translit[s][l])||T.line(src)) : T.line(src);
       var span=document.createElement("span"); span.className="aid-say"; span.lang="en"; span.textContent=text; el.appendChild(span);
     });
-    if(useAuthor) aidNote("sayNote", "The poet's own transliteration, in English letters.", "poet");
-    else aidNote("sayNote", "Transliterated by the site into English letters, so you can sound out the words.", "machine");
+    if(useAuthor) aidNote("sayNote", "The poet's own transliteration, in English letters.", "translit");
+    else aidNote("sayNote", "Transliterated by the site into English letters, so you can sound out the words.", "translit");
     scrollReaderTop();
   }
   function showMeaning(p, btn){
@@ -462,19 +462,19 @@
       // below the poem -- never half author / half machine.
       if(sameShape(stored, p.stanzas)){
         eachLine(function(el,s,l){ var t=stored[s]&&stored[s][l]; if(t){ var span=document.createElement("span"); span.className="aid-mean"; span.lang="en"; span.textContent=t; el.appendChild(span); } });
-        aidNote("meanNote", "The poet's own English translation.", "poet");
+        aidNote("meanNote", "The poet's own English translation.", "trans");
         scrollReaderTop();   // it's inline under each line; read from the top
       } else {
         var block=mountBlock("aid-mean-block", stored);
-        aidNote("meanNote", "The poet's own English translation, shown in full below.", "poet");
+        aidNote("meanNote", "The poet's own English translation, shown in full below.", "trans");
         scrollReaderTo(block);   // shown in bulk below the poem -- take the reader to it
       }
       return;
     }
-    btn.disabled=true; aidNote("meanNote","Translating…","machine"); scrollReaderTop();
+    btn.disabled=true; aidNote("meanNote","Translating…","trans"); scrollReaderTop();
     machineTranslate(p).then(function(map){
       eachLine(function(el,s,l){ var t=map[s+":"+l]; if(t){ var span=document.createElement("span"); span.className="aid-mean"; span.lang="en"; span.textContent=t; el.appendChild(span); } });
-      aidNote("meanNote", "A rough machine translation, a doorway to the sense, not the poem. (Created using MyMemory.)", "machine");
+      aidNote("meanNote", "A rough machine translation, a doorway to the sense, not the poem. (Created using MyMemory.)", "trans");
     }).catch(function(err){
       setOn(btn,false); aidNote("meanNote","Translation is unavailable just now. The free service caps how much it will do in a day."+(err&&err.message?" ("+err.message+")":""), "warn");
     }).then(function(){ btn.disabled=false; });
@@ -505,7 +505,7 @@
       audioEl=new Audio(p.audio);
       audioEl.addEventListener("ended",function(){ stopListening(b); });
       audioEl.addEventListener("error",fallback);
-      audioEl.play().then(function(){ if(fellBack) return; speaking=true; setListenLabel(b,true); rstatus("In her own voice.","poet"); }).catch(fallback);
+      audioEl.play().then(function(){ if(fellBack) return; speaking=true; setListenLabel(b,true); rstatus("In her own voice.","recite"); }).catch(fallback);
       return;
     }
     speakWithBrowser(p,b);
@@ -515,13 +515,22 @@
   function getVoices(){ return new Promise(function(resolve){ if(!window.speechSynthesis) return resolve([]); var v=speechSynthesis.getVoices(); if(v.length) return resolve(v);
     var settled=false; function done(){ if(settled)return; settled=true; clearInterval(poll); speechSynthesis.removeEventListener("voiceschanged",done); resolve(speechSynthesis.getVoices()); }
     speechSynthesis.addEventListener("voiceschanged",done); var poll=setInterval(function(){ if(speechSynthesis.getVoices().length) done(); },120); setTimeout(done,2500); }); }
+  // Prefer a female voice for the poet's work where the device offers one. There is no
+  // standard gender field, so this reads the voice name (best-effort; device-dependent).
+  var FEMALE_RE=/female|woman|\bfem\b|aditi|raveena|heera|kalpana|swara|kanya|ananya|neerja|priya|isha|zira|hazel|susan|samantha|tessa|google/i;
+  var MALE_RE=/\bmale\b|\bman\b|hemant|ravi|prabhat|madhur|rishi|david|mark|george|james|daniel|alex/i;
   function pickVoice(voices,lang){ var want={bn:"bn",hi:"hi",en:"en"}[lang]||"en";
     var hits=voices.filter(function(v){ return v.lang.toLowerCase().replace("_","-").indexOf(want)===0; });
-    if(!hits.length && lang==="en") return voices[0]||null; if(!hits.length) return null;
-    var local=hits.filter(function(v){return v.localService;}); return local[0]||hits[0]; }
+    if(!hits.length){ if(lang==="en") hits=voices.slice(); else return null; }
+    function score(v){ var n=v.name||"", s=0;
+      if(FEMALE_RE.test(n) && !MALE_RE.test(n)) s+=3;   // sounds female
+      if(MALE_RE.test(n)) s-=3;                          // sounds male
+      if(v.localService) s+=1;                           // on-device is snappier
+      return s; }
+    return hits.slice().sort(function(a,b){ return score(b)-score(a); })[0]||null; }
   function speakWithBrowser(p,b,fromFallback){
     if(!window.speechSynthesis){ stopListening(b,true); rstatus("This browser can't read text aloud. Chrome on Android or Edge on Windows can.","warn"); return; }
-    rstatus("Finding a voice…","machine");
+    rstatus("Finding a voice…","recite");
     getVoices().then(function(voices){
       var voice=pickVoice(voices,p.lang);
       if(!voice){ stopListening(b,true); rstatus(noVoiceHelp(p.lang),"warn"); return; }
@@ -529,7 +538,7 @@
       if(!chunks.length){ stopListening(b); return; }
       var rate=$("#rate"); var rv=rate?parseFloat(rate.value):0.86;
       speechSynthesis.cancel(); speaking=true; setListenLabel(b,true);
-      rstatus((fromFallback?"That recording wouldn't play, so it's read by the ":"Read by the ")+voice.name+" voice on this device.","machine");
+      rstatus((fromFallback?"That recording wouldn't play, so it's read by the ":"Read by the ")+voice.name+" voice on this device.","recite");
       // Speak one line at a time, kicking off the next from each line's onend, and keep a
       // reference to the live utterance. Chrome drops queued utterances (only the first line
       // plays) and garbage-collects unreferenced ones; this drives the sequence reliably.
@@ -544,9 +553,19 @@
         speechSynthesis.speak(u);
       }
       next();
+      // Long poems: keep the device voice alive past a browser's internal cutoff.
+      // Desktop Chrome silently stops after ~15s; a periodic pause+resume resets that timer.
+      // On phones that same pause/resume CUTS the speech off, so there we only nudge resume()
+      // (a no-op while playing, but it recovers an auto-pause) -- never pause. This keeps a
+      // long recitation going without the mobile cut-off. (Her uploaded mp3s use <audio>, which
+      // has no such limit and is unaffected.)
       if(keepAlive) clearInterval(keepAlive);
-      keepAlive=setInterval(function(){ if(!speaking){ clearInterval(keepAlive); keepAlive=null; return; }
-        if(speechSynthesis.speaking && !speechSynthesis.paused){ speechSynthesis.pause(); speechSynthesis.resume(); } },9000);
+      var touch = (window.matchMedia && matchMedia("(hover: none)").matches) || navigator.maxTouchPoints>0;
+      keepAlive=setInterval(function(){
+        if(!speaking){ clearInterval(keepAlive); keepAlive=null; return; }
+        if(touch){ if(speechSynthesis.paused) speechSynthesis.resume(); }
+        else if(speechSynthesis.speaking && !speechSynthesis.paused){ speechSynthesis.pause(); speechSynthesis.resume(); }
+      }, touch?4000:10000);
     });
   }
   function noVoiceHelp(lang){ return "No "+langName(lang)+" voice on this device — open Transliteration to sound it out."; }

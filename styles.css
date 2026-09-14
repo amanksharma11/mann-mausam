@@ -482,10 +482,15 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
    title/tags never leave the top and the tools never leave the bottom -- only the poem
    scrolls between them. Vertical padding lives on the head/foot, not the panel, so the
    pinned bands cover the scrolling poem cleanly. */
-.reader-panel { position: relative; width: 100%; max-height: 92vh; max-height: 92dvh; overflow: auto; overflow-anchor: none; background: var(--card); border: 2px solid var(--ink); border-radius: var(--radius); box-shadow: var(--shadow-hard); padding: 0 clamp(1.4rem, 4vw, 2.6rem); animation: rise .3s cubic-bezier(.2,.8,.2,1); }
+.reader-panel { position: relative; width: 100%; max-height: 92vh; max-height: 92dvh; overflow: hidden; display: flex; flex-direction: column; background: var(--card); border: 2px solid var(--ink); border-radius: var(--radius); box-shadow: var(--shadow-hard); padding: 0 clamp(1.4rem, 4vw, 2.6rem); animation: rise .3s cubic-bezier(.2,.8,.2,1); }
+.reader-content { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; width: 100%; }
+/* only the middle scrolls; fade its top/bottom edges so half-cut lines don't peek out
+   above the footer or at the top clip */
+.r-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; overflow-anchor: none; padding: 0 0 .4rem;
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent 100%);
+          mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent 100%); }
 .r-head { position: sticky; top: 0; z-index: 3; background: var(--card); padding: clamp(1.3rem, 3.5vw, 2.1rem) 0 .7rem; }
-.r-scroll { padding: .2rem 0 .4rem; }
-.r-foot { position: sticky; bottom: 0; z-index: 3; background: var(--card); padding: .9rem 0 clamp(1.2rem, 3.5vw, 2rem); border-top: 1.5px dashed var(--line); }
+.r-foot { flex: none; position: relative; z-index: 3; background: var(--card); padding: .9rem 0 clamp(1.2rem, 3.5vw, 2rem); border-top: 1.5px dashed var(--line); }
 @keyframes fade { from { opacity: 0; } } @keyframes rise { from { opacity: 0; transform: translateY(18px); } }
 .reader-close { position: absolute; top: .8rem; right: .8rem; z-index: 5; border: 2px solid var(--ink); background: var(--paper); color: var(--ink); width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-size: 1rem; }
 .reader-close:hover { background: var(--terracotta); color: #fff; }
@@ -544,9 +549,10 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 /* each reading aid's own little caption (poet's vs machine); clears when the aid is off */
 .aid-note { margin: .5rem 0 0; font-size: .82rem; color: var(--ink-soft); }
 .aid-note[data-tone="warn"] { color: var(--terracotta-2); }
-/* who made the aid, shared across transliteration / translation / recitation captions */
-.aid-note[data-tone="poet"],   .r-status[data-tone="poet"]    { color: var(--c-poet); }
-.aid-note[data-tone="machine"],.r-status[data-tone="machine"] { color: var(--c-machine); }
+/* each aid's caption in its own colour, matching that aid's on-page colour */
+.aid-note[data-tone="translit"], .r-status[data-tone="translit"] { color: var(--c-transliteration); }
+.aid-note[data-tone="trans"],    .r-status[data-tone="trans"]    { color: var(--c-translation); }
+.aid-note[data-tone="recite"],   .r-status[data-tone="recite"]   { color: var(--c-recording); }
 /* the poet's translation when it doesn't map line-for-line: shown whole, below the poem */
 .aid-mean-block { margin: 1rem 0 0; padding: .8rem 1rem; border-left: 2px solid var(--c-translation); background: color-mix(in srgb, var(--c-translation) 7%, transparent); color: var(--c-translation); font-family: var(--f-body); white-space: pre-line; overflow-wrap: anywhere; line-height: 1.5; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
 /* the poet's transliteration when it doesn't map line-for-line: shown whole, below the poem */
@@ -583,7 +589,10 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 @media (max-width: 640px) {
   .reader { padding: .5rem 1.25rem; }                       /* smaller side gutters -> wider content */
   .reader-panel { max-height: 96vh; max-height: 96dvh; padding: 0 1.1rem; }
-  .r-head { position: static; padding: 1rem 0 .5rem; }
+  .r-head { position: static; padding: 1rem 0 .5rem; }      /* header scrolls with the poem */
+  /* header scrolls now, so fade the TOP edge too (not just the bottom) */
+  .r-scroll { -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+                      mask-image: linear-gradient(to bottom, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%); }
   .r-title { font-size: clamp(1.45rem, 6.4vw, 1.9rem); }
   .r-meta { margin: .5rem 0 .6rem; }
   .r-badges { margin: .3rem 0 .6rem; }
@@ -598,6 +607,8 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
    compact treatment (no labels, one wrap of buttons) so the poem keeps room. */
 @media (max-height: 600px) {
   .r-head { position: static; }
+  .r-scroll { -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+                      mask-image: linear-gradient(to bottom, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%); }
   .r-foot { padding: .6rem 0 .7rem; }
   .tool-label { display: none; }
   .r-tools { display: flex; flex-wrap: wrap; gap: .5rem; }
