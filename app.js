@@ -390,11 +390,16 @@
   function wireReader(p){
     $$("#reader [data-aid]").forEach(function(b){ b.addEventListener("click",function(){ toggleAid(p,b,b.getAttribute("data-aid")); }); });
     var lb=$("#listenBtn"); if(lb) lb.addEventListener("click",function(){ toggleListen(p,lb); });
-    var sb=$("#shareBtn"); if(sb) sb.addEventListener("click",function(){ share(p,sb); });
-    var cb=$("#copyBtn"); if(cb) cb.addEventListener("click",function(){ copyPoem(p,cb); });
+    var sb=$("#shareBtn"); if(sb) sb.addEventListener("click",function(){ scrollReaderTop(); share(p,sb); });
+    var cb=$("#copyBtn"); if(cb) cb.addEventListener("click",function(){ scrollReaderTop(); copyPoem(p,cb); });
     var im=$(".r-image img"); if(im) im.addEventListener("error",function(){ var f=im.closest(".r-image"); if(f) f.remove(); });   // a bad image URL just disappears
   }
   function rstatus(msg,tone){ var s=$("#rStatus"); if(!s) return; s.textContent=msg||""; if(tone) s.setAttribute("data-tone",tone); else s.removeAttribute("data-tone"); }
+  // reading the popup back to the top (most tools) or down to a spot (a bulk translation)
+  function scrollReaderTop(){ var pl=$(".reader-panel"); if(pl) pl.scrollTop=0; }
+  function scrollReaderTo(el){ var pl=$(".reader-panel"), hd=$("#reader .r-head"); if(!pl||!el) return;
+    var top = el.getBoundingClientRect().top - pl.getBoundingClientRect().top + pl.scrollTop - (hd?hd.offsetHeight:0) - 10;
+    pl.scrollTop = Math.max(0, top); }
   function setOn(b,on){ b.classList.toggle("is-on",on); b.setAttribute("aria-pressed",String(on)); }
   function eachLine(fn){ $$("#poemBody .line").forEach(function(el){ fn(el, +el.dataset.s, +el.dataset.l); }); }
   function strip(cls){ $$("#poemBody ."+cls).forEach(function(n){ n.remove(); }); }
@@ -409,9 +414,10 @@
     if(kind==="say"){
       if(on){ setOn(btn,false); strip("aid-say"); aidNote("sayNote",""); }
       else { setOn(btn,true); showSay(p); }
+      scrollReaderTop();   // read the poem from the top, with (or without) the romanisation
     } else {
-      if(on){ setOn(btn,false); strip("aid-mean"); removeMeanBlock(); aidNote("meanNote",""); }
-      else { setOn(btn,true); showMeaning(p,btn); }
+      if(on){ setOn(btn,false); strip("aid-mean"); removeMeanBlock(); aidNote("meanNote",""); scrollReaderTop(); }
+      else { setOn(btn,true); showMeaning(p,btn); }   // showMeaning scrolls itself (to the block, or to the top)
     }
   }
   function showSay(p){
@@ -420,8 +426,8 @@
     // otherwise the machine romanises every line. Never mix the two.
     var useAuthor = p.translit && sameShape(p.translit, p.stanzas);
     eachLine(function(el,s,l){
-      var src=p.stanzas[s][l]; if(!src||!src.trim()) return;
-      var text = useAuthor ? (p.translit[s][l]||T.line(src)) : T.line(src);
+      var st=p.stanzas[s]; var src=st&&st[l]; if(!src||!src.trim()) return;
+      var text = useAuthor ? ((p.translit[s]&&p.translit[s][l])||T.line(src)) : T.line(src);
       var span=document.createElement("span"); span.className="aid-say"; span.lang="en"; span.textContent=text; el.appendChild(span);
     });
     if(useAuthor) aidNote("sayNote", "The poet's own transliteration, in English letters.", "poet");
@@ -435,18 +441,21 @@
       // below the poem -- never half author / half machine.
       if(sameShape(stored, p.stanzas)){
         eachLine(function(el,s,l){ var t=stored[s]&&stored[s][l]; if(t){ var span=document.createElement("span"); span.className="aid-mean"; span.lang="en"; span.textContent=t; el.appendChild(span); } });
+        aidNote("meanNote", "The poet's own English translation.", "poet");
+        scrollReaderTop();   // it's inline under each line; read from the top
       } else {
         var block=document.createElement("div"); block.className="aid-mean-block"; block.lang="en";
         block.textContent=stored.map(function(st){ return st.join("\n"); }).join("\n\n");
         var body=$("#poemBody"); body.parentNode.insertBefore(block, body.nextSibling);
+        aidNote("meanNote", "The poet's own English translation.", "poet");
+        scrollReaderTo(block);   // shown in bulk below the poem -- take the reader to it
       }
-      aidNote("meanNote", "The poet's own English translation.", "poet");
       return;
     }
-    btn.disabled=true; aidNote("meanNote","Translating…","machine");
+    btn.disabled=true; aidNote("meanNote","Translating…","machine"); scrollReaderTop();
     machineTranslate(p).then(function(map){
       eachLine(function(el,s,l){ var t=map[s+":"+l]; if(t){ var span=document.createElement("span"); span.className="aid-mean"; span.lang="en"; span.textContent=t; el.appendChild(span); } });
-      aidNote("meanNote", "A rough machine translation (MyMemory), a doorway to the sense, not the poem.", "machine");
+      aidNote("meanNote", "A rough machine translation, a doorway to the sense, not the poem. (Created using MyMemory.)", "machine");
     }).catch(function(err){
       setOn(btn,false); aidNote("meanNote","Translation is unavailable just now. The free service caps how much it will do in a day."+(err&&err.message?" ("+err.message+")":""), "warn");
     }).then(function(){ btn.disabled=false; });
@@ -468,6 +477,7 @@
   function setListenLabel(b,on){ b.innerHTML=on?(ICON.stop+"Stop"):(ICON.play+"Recite"); b.classList.toggle("reciting",on); setOn(b,on); }
   function toggleListen(p,b){
     if(speaking){ stopListening(b); return; }
+    scrollReaderTop();   // hear it from the top
     if(hasAudio(p)){   // only a real audio file; garbage goes straight to the device voice
       // A bad audio URL can fire BOTH the error event and a play() rejection; this guard
       // makes sure we fall back to the device voice only once.
