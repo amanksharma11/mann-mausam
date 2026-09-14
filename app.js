@@ -355,7 +355,7 @@
 
     var aids='<div class="tool-group"><p class="tool-label">Help me read this</p>';
     if(T.supports(p.lang)) aids+='<button class="btn btn--sm" data-aid="say" type="button">'+ICON.say+'Transliteration</button>';
-    if(p.translation || (CFG.features && CFG.features.autoTranslate && p.lang!=="en")) aids+='<button class="btn btn--sm" data-aid="mean" type="button">'+ICON.mean+'English meaning</button>';
+    if(p.translation || (CFG.features && CFG.features.autoTranslate && p.lang!=="en")) aids+='<button class="btn btn--sm" data-aid="mean" type="button">'+ICON.mean+'Translation</button>';
     if(CFG.features && CFG.features.recitation) aids+='<button class="btn btn--sm" id="listenBtn" type="button">'+ICON.play+'Recite</button>';
     aids+='</div>';
 
