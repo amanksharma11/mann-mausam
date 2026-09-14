@@ -210,12 +210,13 @@
     themes=uniq(themes).slice(0,16);
     $("#themeChips").innerHTML=(themes.length?'<button class="chip'+(STATE.theme==="all"?" active":"")+'" data-tag="all">all themes</button>':"")+
       themes.map(function(t){ return '<button class="chip'+(STATE.theme===t?" active":"")+'" data-tag="'+esc(t)+'">'+tagLabel(t)+'</button>'; }).join("");
-    // attribute chips (combinable) -- only offered when at least one poem has that thing
-    var anyAudio=false,anyTrans=false,anyImg=false;
-    POEMS.forEach(function(p){ if(hasAudio(p))anyAudio=true; if(hasTranslation(p))anyTrans=true; if(hasImage(p))anyImg=true; });
-    var defs=[["rec","with recording",anyAudio],["trans","with translation",anyTrans],["img","with image",anyImg]];
-    var ac=$("#attrChips"); if(ac){ ac.innerHTML=defs.filter(function(d){return d[2];}).map(function(d){
-      return '<button class="chip'+(STATE.attrs.indexOf(d[0])>=0?" active":"")+'" data-attr="'+d[0]+'">'+d[1]+'</button>'; }).join(""); }
+    // attribute chips (combinable) -- only offered when at least one poem has that thing.
+    // Each carries the same little icon as the matching badge on the poem chips.
+    var anyAudio=false,anyTrans=false;
+    POEMS.forEach(function(p){ if(hasAudio(p))anyAudio=true; if(hasTranslation(p))anyTrans=true; });
+    var defs=[["rec","with recording",ICON.bAudio,anyAudio],["trans","with translation",ICON.bTrans,anyTrans]];
+    var ac=$("#attrChips"); if(ac){ ac.innerHTML=defs.filter(function(d){return d[3];}).map(function(d){
+      return '<button class="chip'+(STATE.attrs.indexOf(d[0])>=0?" active":"")+'" data-attr="'+d[0]+'">'+d[2]+d[1]+'</button>'; }).join(""); }
   }
 
   /* ------------------------------------------------------------------ grid */
@@ -232,9 +233,14 @@
     return true;
   }
   function snippet(p){ return flatLines(p.stanzas).filter(function(l){return l.trim();}).slice(0,4).join("\n"); }
-  function hasAudio(p){ return !!(p.audio && String(p.audio).trim()); }
+  // A recording/image counts only if the cell holds a real media file (a URL/path with an
+  // audio or image extension, or a data URI) -- not a stray note or a non-media link. So a
+  // garbage value shows no badge, no filter match, and recitation falls back to the device voice.
+  var AUDIO_EXT=/\.(mp3|m4a|aac|ogg|oga|opus|wav|weba|flac)(\?.*)?$/i;
+  var IMG_EXT=/\.(jpe?g|png|gif|webp|avif|svg|bmp)(\?.*)?$/i;
+  function hasAudio(p){ var v=String(p.audio||"").trim(); return !!v && (/^data:audio\//i.test(v) || AUDIO_EXT.test(v)); }
   function hasTranslation(p){ return !!(p.translation && p.translation.en); }   // the poet's own translation (en poems have none)
-  function hasImage(p){ return !!(p.image && String(p.image).trim()); }
+  function hasImage(p){ var v=String(p.image||"").trim(); return !!v && (/^data:image\//i.test(v) || IMG_EXT.test(v)); }
   // do two stanza-arrays line up line-for-line? (used to decide author vs machine handling)
   function sameShape(a,b){ if(!a||!b||a.length!==b.length) return false; for(var i=0;i<a.length;i++){ if(!a[i]||!b[i]||a[i].length!==b[i].length) return false; } return true; }
   // "what this poem carries" badges, shown on cards and in the reader (no badge for transliteration)
@@ -358,17 +364,26 @@
           '<button class="btn btn--sm" id="copyBtn" type="button">'+ICON.copy+'Copy</button></div>';
 
     return ''+
-      '<span class="r-lang lang-'+p.lang+'">'+esc(langName(p.lang))+(p.date?' · '+esc(formatDate(p.date)):'')+'</span>'+
-      '<h1 class="r-title lang-'+p.lang+'" id="readerTitle">'+esc(p.title)+'</h1>'+
-      (romanLine?'<p class="r-roman">'+esc(romanLine)+'</p>':'')+
-      (p.tags.length?'<div class="r-meta">'+p.tags.map(function(t){return '<span class="tag">'+tagLabel(t)+'</span>';}).join("")+'</div>':'')+
-      (badges(p)?'<div class="r-badges">'+badges(p)+'</div>':'')+
-      '<div class="poem-body lang-'+p.lang+'" id="poemBody">'+lines+'</div>'+
-      (p.note?'<div class="r-note">'+esc(p.note)+'</div>':'')+
-      (hasImage(p)?'<figure class="r-image"><img alt="" loading="lazy" src="'+esc(p.image)+'"></figure>':'')+
-      '<div class="r-tools">'+aids+acts+'</div>'+
-      '<div class="aid-notes"><p class="aid-note" id="sayNote" hidden></p><p class="aid-note" id="meanNote" hidden></p></div>'+
-      '<p class="r-status" id="rStatus" role="status" aria-live="polite"></p>';
+      // pinned top: language, title, tags, badges
+      '<div class="r-head">'+
+        '<span class="r-lang lang-'+p.lang+'">'+esc(langName(p.lang))+(p.date?' · '+esc(formatDate(p.date)):'')+'</span>'+
+        '<h1 class="r-title lang-'+p.lang+'" id="readerTitle">'+esc(p.title)+'</h1>'+
+        (romanLine?'<p class="r-roman">'+esc(romanLine)+'</p>':'')+
+        (p.tags.length?'<div class="r-meta">'+p.tags.map(function(t){return '<span class="tag">'+tagLabel(t)+'</span>';}).join("")+'</div>':'')+
+        (badges(p)?'<div class="r-badges">'+badges(p)+'</div>':'')+
+      '</div>'+
+      // scrolling middle: the poem itself (plus any note/image)
+      '<div class="r-scroll">'+
+        '<div class="poem-body lang-'+p.lang+'" id="poemBody">'+lines+'</div>'+
+        (p.note?'<div class="r-note">'+esc(p.note)+'</div>':'')+
+        (hasImage(p)?'<figure class="r-image"><img alt="" loading="lazy" src="'+esc(p.image)+'"></figure>':'')+
+      '</div>'+
+      // pinned bottom: the tools, the aid captions, and the recite status
+      '<div class="r-foot">'+
+        '<div class="r-tools">'+aids+acts+'</div>'+
+        '<div class="aid-notes"><p class="aid-note" id="sayNote" hidden></p><p class="aid-note" id="meanNote" hidden></p></div>'+
+        '<p class="r-status" id="rStatus" role="status" aria-live="polite"></p>'+
+      '</div>';
   }
   function formatDate(iso){ if(!iso) return ""; var d=new Date(iso.length===10?iso+"T00:00:00":iso); if(isNaN(d)) return iso; return d.toLocaleDateString(undefined,{year:"numeric",month:"long"}); }
 
@@ -409,7 +424,8 @@
       var text = useAuthor ? (p.translit[s][l]||T.line(src)) : T.line(src);
       var span=document.createElement("span"); span.className="aid-say"; span.lang="en"; span.textContent=text; el.appendChild(span);
     });
-    aidNote("sayNote", "The poem written in English letters, so you can sound out the words and read it aloud even if the script is new to you.");
+    if(useAuthor) aidNote("sayNote", "The poet's own transliteration, in English letters.", "poet");
+    else aidNote("sayNote", "Transliterated by the site into English letters, so you can sound out the words.", "machine");
   }
   function showMeaning(p, btn){
     strip("aid-mean"); removeMeanBlock();
@@ -424,13 +440,13 @@
         block.textContent=stored.map(function(st){ return st.join("\n"); }).join("\n\n");
         var body=$("#poemBody"); body.parentNode.insertBefore(block, body.nextSibling);
       }
-      aidNote("meanNote", "The poet's own English translation.");
+      aidNote("meanNote", "The poet's own English translation.", "poet");
       return;
     }
-    btn.disabled=true; aidNote("meanNote","Translating…");
+    btn.disabled=true; aidNote("meanNote","Translating…","machine");
     machineTranslate(p).then(function(map){
       eachLine(function(el,s,l){ var t=map[s+":"+l]; if(t){ var span=document.createElement("span"); span.className="aid-mean"; span.lang="en"; span.textContent=t; el.appendChild(span); } });
-      aidNote("meanNote", "A rough machine translation (MyMemory), a doorway to the sense, not the poem.");
+      aidNote("meanNote", "A rough machine translation (MyMemory), a doorway to the sense, not the poem.", "machine");
     }).catch(function(err){
       setOn(btn,false); aidNote("meanNote","Translation is unavailable just now. The free service caps how much it will do in a day."+(err&&err.message?" ("+err.message+")":""), "warn");
     }).then(function(){ btn.disabled=false; });
@@ -452,7 +468,7 @@
   function setListenLabel(b,on){ b.innerHTML=on?(ICON.stop+"Stop"):(ICON.play+"Recite"); b.classList.toggle("reciting",on); setOn(b,on); }
   function toggleListen(p,b){
     if(speaking){ stopListening(b); return; }
-    if(p.audio){
+    if(hasAudio(p)){   // only a real audio file; garbage goes straight to the device voice
       // A bad audio URL can fire BOTH the error event and a play() rejection; this guard
       // makes sure we fall back to the device voice only once.
       var fellBack=false;
@@ -460,13 +476,13 @@
       audioEl=new Audio(p.audio);
       audioEl.addEventListener("ended",function(){ stopListening(b); });
       audioEl.addEventListener("error",fallback);
-      audioEl.play().then(function(){ if(fellBack) return; speaking=true; setListenLabel(b,true); rstatus("In her own voice."); }).catch(fallback);
+      audioEl.play().then(function(){ if(fellBack) return; speaking=true; setListenLabel(b,true); rstatus("In her own voice.","poet"); }).catch(fallback);
       return;
     }
     speakWithBrowser(p,b);
   }
-  function stopListening(b){ speaking=false; if(b) setListenLabel(b,false); else { var lb=$("#listenBtn"); if(lb) setListenLabel(lb,false); }
-    if(audioEl){ audioEl.pause(); audioEl=null; } if(window.speechSynthesis) speechSynthesis.cancel(); if(keepAlive){ clearInterval(keepAlive); keepAlive=null; } rstatus(""); }
+  function stopListening(b, keepStatus){ speaking=false; if(b) setListenLabel(b,false); else { var lb=$("#listenBtn"); if(lb) setListenLabel(lb,false); }
+    if(audioEl){ audioEl.pause(); audioEl=null; } if(window.speechSynthesis) speechSynthesis.cancel(); if(keepAlive){ clearInterval(keepAlive); keepAlive=null; } if(!keepStatus) rstatus(""); }
   function getVoices(){ return new Promise(function(resolve){ if(!window.speechSynthesis) return resolve([]); var v=speechSynthesis.getVoices(); if(v.length) return resolve(v);
     var settled=false; function done(){ if(settled)return; settled=true; clearInterval(poll); speechSynthesis.removeEventListener("voiceschanged",done); resolve(speechSynthesis.getVoices()); }
     speechSynthesis.addEventListener("voiceschanged",done); var poll=setInterval(function(){ if(speechSynthesis.getVoices().length) done(); },120); setTimeout(done,2500); }); }
@@ -475,16 +491,16 @@
     if(!hits.length && lang==="en") return voices[0]||null; if(!hits.length) return null;
     var local=hits.filter(function(v){return v.localService;}); return local[0]||hits[0]; }
   function speakWithBrowser(p,b,fromFallback){
-    if(!window.speechSynthesis){ rstatus("This browser can't read text aloud. Chrome on Android or Edge on Windows can.","warn"); stopListening(b); return; }
-    rstatus("Finding a voice…");
+    if(!window.speechSynthesis){ stopListening(b,true); rstatus("This browser can't read text aloud. Chrome on Android or Edge on Windows can.","warn"); return; }
+    rstatus("Finding a voice…","machine");
     getVoices().then(function(voices){
       var voice=pickVoice(voices,p.lang);
-      if(!voice){ rstatus(noVoiceHelp(p.lang),"warn"); stopListening(b); return; }
+      if(!voice){ stopListening(b,true); rstatus(noVoiceHelp(p.lang),"warn"); return; }
       var chunks=flatLines(p.stanzas).filter(function(l){return l&&l.trim();});
       if(!chunks.length){ stopListening(b); return; }
       var rate=$("#rate"); var rv=rate?parseFloat(rate.value):0.86;
       speechSynthesis.cancel(); speaking=true; setListenLabel(b,true);
-      rstatus((fromFallback?"That recording wouldn't play, so it's read by the ":"Read by the ")+voice.name+" voice on this device.");
+      rstatus((fromFallback?"That recording wouldn't play, so it's read by the ":"Read by the ")+voice.name+" voice on this device.","machine");
       // Speak one line at a time, kicking off the next from each line's onend, and keep a
       // reference to the live utterance. Chrome drops queued utterances (only the first line
       // plays) and garbage-collects unreferenced ones; this drives the sequence reliably.
