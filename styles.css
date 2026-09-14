@@ -576,23 +576,35 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } .reader-scrim, .reader-panel { animation: none; } }
 
 /* ---- mobile / touch tuning ---------------------------------------------- */
-/* Phones: condense the reader so the poem keeps usable room between the pinned
-   header and footer. */
-@media (max-width: 560px) {
-  .r-head { padding: 1.05rem 0 .55rem; }
-  .r-foot { padding: .75rem 0 1rem; }
+/* Phones: the poem gets the room. Only the footer tools and the close button stay
+   pinned; the title / tags scroll with the poem (scroll up to see them). The two
+   tool groups collapse into one compact wrap (labels hidden) so the footer is ~2
+   short rows instead of a tall stack. */
+@media (max-width: 640px) {
+  .reader { padding: .5rem 1.25rem; }                       /* smaller side gutters -> wider content */
+  .reader-panel { max-height: 96vh; max-height: 96dvh; padding: 0 1.1rem; }
+  .r-head { position: static; padding: 1rem 0 .5rem; }
   .r-title { font-size: clamp(1.45rem, 6.4vw, 1.9rem); }
-  .r-tools { gap: .8rem; }
+  .r-meta { margin: .5rem 0 .6rem; }
   .r-badges { margin: .3rem 0 .6rem; }
-  .r-meta { margin: .6rem 0 .7rem; }
+
+  .r-foot { padding: .7rem 0 .85rem; }
+  .tool-label { display: none; }                 /* drop "Help me read this" / "Take it with you" */
+  .r-tools { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .tool-group { display: contents; }             /* all five buttons flow in one wrap */
+  .aid-note, .r-status { font-size: .8rem; margin-top: .35rem; }
 }
-/* Short screens (landscape phones): the header + footer together are taller than
-   the popup, so stop pinning the header -- let it scroll and keep only the footer
-   (and the close button) fixed, so nothing overlaps. */
+/* Short screens (landscape phones): header scrolls, and the footer gets the same
+   compact treatment (no labels, one wrap of buttons) so the poem keeps room. */
 @media (max-height: 600px) {
   .r-head { position: static; }
+  .r-foot { padding: .6rem 0 .7rem; }
+  .tool-label { display: none; }
+  .r-tools { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .tool-group { display: contents; }
+  .aid-note, .r-status { font-size: .8rem; margin-top: .3rem; }
 }
-/* Touch devices: give controls a finger-sized hit area (~44px). */
+/* Touch devices: finger-sized hit areas (~44px). */
 @media (hover: none) {
   .btn--sm { min-height: 42px; }
   .chip { min-height: 40px; display: inline-flex; align-items: center; }

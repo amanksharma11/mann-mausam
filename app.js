@@ -398,7 +398,9 @@
   // reading the popup back to the top (most tools) or down to a spot (a bulk translation)
   function scrollReaderTop(){ var pl=$(".reader-panel"); if(pl) pl.scrollTop=0; }
   function scrollReaderTo(el){ var pl=$(".reader-panel"), hd=$("#reader .r-head"); if(!pl||!el) return;
-    var top = el.getBoundingClientRect().top - pl.getBoundingClientRect().top + pl.scrollTop - (hd?hd.offsetHeight:0) - 10;
+    // only offset for the header when it's actually pinned (on phones it scrolls away)
+    var stick = (hd && getComputedStyle(hd).position==="sticky") ? hd.offsetHeight : 0;
+    var top = el.getBoundingClientRect().top - pl.getBoundingClientRect().top + pl.scrollTop - stick - 10;
     pl.scrollTop = Math.max(0, top); }
   function setOn(b,on){ b.classList.toggle("is-on",on); b.setAttribute("aria-pressed",String(on)); }
   function eachLine(fn){ $$("#poemBody .line").forEach(function(el){ fn(el, +el.dataset.s, +el.dataset.l); }); }
@@ -547,8 +549,7 @@
         if(speechSynthesis.speaking && !speechSynthesis.paused){ speechSynthesis.pause(); speechSynthesis.resume(); } },9000);
     });
   }
-  function noVoiceHelp(lang){ if(lang==="bn") return "No Bangla voice is installed here. Chrome on Android usually has one; on Windows add Bengali under Settings › Time & language. Apple devices have no Bangla voice yet, so try the Transliteration view.";
-    return "No "+langName(lang)+" voice is installed here. Adding the language in your system settings usually adds its voice too."; }
+  function noVoiceHelp(lang){ return "No "+langName(lang)+" voice on this device — open Transliteration to sound it out."; }
 
   /* ------------------------------------------------------------- share / copy */
   function poemLink(p){ return location.origin+location.pathname+"#/poem/"+p.slug; }
