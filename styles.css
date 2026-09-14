@@ -552,6 +552,8 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 .aid-note[data-tone="machine"],.r-status[data-tone="machine"] { color: var(--c-machine); }
 /* the poet's translation when it doesn't map line-for-line: shown whole, below the poem */
 .aid-mean-block { margin: 1rem 0 0; padding: .8rem 1rem; border-left: 2px solid var(--c-translation); background: color-mix(in srgb, var(--c-translation) 7%, transparent); color: var(--c-translation); font-family: var(--f-body); white-space: pre-line; line-height: 1.5; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+/* the poet's transliteration when it doesn't map line-for-line: shown whole, below the poem */
+.aid-say-block { margin: 1rem 0 0; padding: .8rem 1rem; border-left: 2px solid var(--c-transliteration); background: color-mix(in srgb, var(--c-transliteration) 7%, transparent); color: var(--c-transliteration); font-family: var(--f-body); font-style: italic; white-space: pre-line; line-height: 1.5; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
 /* a poem's image: at the bottom, contained to a tidy box, aspect ratio kept */
 .r-image { margin: 1.5rem 0 0; text-align: center; }
 .r-image img { max-width: 100%; max-height: 340px; width: auto; height: auto; border: 2px solid var(--ink); border-radius: var(--radius-sm); }

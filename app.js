@@ -409,21 +409,39 @@
   // its button is switched off). Recitation keeps the separate #rStatus line.
   function aidNote(id,msg,tone){ var n=$("#"+id); if(!n) return; n.textContent=msg||""; n.hidden=!msg; if(tone) n.setAttribute("data-tone",tone); else n.removeAttribute("data-tone"); }
   function removeMeanBlock(){ $$("#reader .aid-mean-block").forEach(function(n){ n.remove(); }); }
+  function removeSayBlock(){ $$("#reader .aid-say-block").forEach(function(n){ n.remove(); }); }
+  // A whole-poem aid (used when the poet's transliteration/translation doesn't line up
+  // line-for-line). Keeps a stable order below the poem: transliteration block, then
+  // translation block, so if both are open they read the same way as the per-line aids.
+  function mountBlock(cls, stanzas){
+    var block=document.createElement("div"); block.className=cls; block.lang="en";
+    block.textContent=stanzas.map(function(st){ return st.join("\n"); }).join("\n\n");
+    var poem=$("#poemBody"); if(!poem) return block;
+    var ref = (cls==="aid-mean-block") ? ($("#reader .aid-say-block")||poem) : poem;
+    ref.parentNode.insertBefore(block, ref.nextSibling);
+    return block;
+  }
   function toggleAid(p, btn, kind){
     var on=btn.classList.contains("is-on");
     if(kind==="say"){
-      if(on){ setOn(btn,false); strip("aid-say"); aidNote("sayNote",""); }
-      else { setOn(btn,true); showSay(p); }
-      scrollReaderTop();   // read the poem from the top, with (or without) the romanisation
+      if(on){ setOn(btn,false); strip("aid-say"); removeSayBlock(); aidNote("sayNote",""); scrollReaderTop(); }
+      else { setOn(btn,true); showSay(p); }   // showSay scrolls itself (to the block, or to the top)
     } else {
       if(on){ setOn(btn,false); strip("aid-mean"); removeMeanBlock(); aidNote("meanNote",""); scrollReaderTop(); }
       else { setOn(btn,true); showMeaning(p,btn); }   // showMeaning scrolls itself (to the block, or to the top)
     }
   }
   function showSay(p){
-    strip("aid-say");
-    // Use the poet's transliteration only if it lines up with the poem line-for-line;
-    // otherwise the machine romanises every line. Never mix the two.
+    strip("aid-say"); removeSayBlock();
+    // The poet's own transliteration is used when it lines up line-for-line; when she gave
+    // one that doesn't line up, it's shown whole below the poem (like a bulk translation);
+    // otherwise the site romanises every line. Never mix the two.
+    if(p.translit && !sameShape(p.translit, p.stanzas)){
+      var block=mountBlock("aid-say-block", p.translit);
+      aidNote("sayNote", "The poet's own transliteration, shown in full below.", "poet");
+      scrollReaderTo(block);
+      return;
+    }
     var useAuthor = p.translit && sameShape(p.translit, p.stanzas);
     eachLine(function(el,s,l){
       var st=p.stanzas[s]; var src=st&&st[l]; if(!src||!src.trim()) return;
@@ -432,6 +450,7 @@
     });
     if(useAuthor) aidNote("sayNote", "The poet's own transliteration, in English letters.", "poet");
     else aidNote("sayNote", "Transliterated by the site into English letters, so you can sound out the words.", "machine");
+    scrollReaderTop();
   }
   function showMeaning(p, btn){
     strip("aid-mean"); removeMeanBlock();
@@ -444,10 +463,8 @@
         aidNote("meanNote", "The poet's own English translation.", "poet");
         scrollReaderTop();   // it's inline under each line; read from the top
       } else {
-        var block=document.createElement("div"); block.className="aid-mean-block"; block.lang="en";
-        block.textContent=stored.map(function(st){ return st.join("\n"); }).join("\n\n");
-        var body=$("#poemBody"); body.parentNode.insertBefore(block, body.nextSibling);
-        aidNote("meanNote", "The poet's own English translation.", "poet");
+        var block=mountBlock("aid-mean-block", stored);
+        aidNote("meanNote", "The poet's own English translation, shown in full below.", "poet");
         scrollReaderTo(block);   // shown in bulk below the poem -- take the reader to it
       }
       return;
