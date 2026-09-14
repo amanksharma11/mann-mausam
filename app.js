@@ -508,11 +508,12 @@
   var keepAlive=null, audioEl=null, curUtter=null, tts=null, ttsGen=0;
 
   function reciteUI(){
-    var b=$("#listenBtn"), grp=$("#reciteGroup");
+    var b=$("#listenBtn"), grp=$("#reciteGroup"), rb=$("#reciteRestart");
     if(!b) return;
     if(!speaking){ b.innerHTML=ICON.play+"Recite"; b.classList.remove("reciting"); setOn(b,false); if(grp) grp.classList.remove("on"); }
     else if(recPaused){ b.innerHTML=ICON.play+"Resume"; b.classList.remove("reciting"); setOn(b,true); if(grp) grp.classList.add("on"); }
     else { b.innerHTML=ICON.pause+"Pause"; b.classList.add("reciting"); setOn(b,true); if(grp) grp.classList.add("on"); }
+    if(rb) rb.classList.toggle("is-on", speaking);   // restart matches the (filled) main button
   }
   function stopKeepAlive(){ if(keepAlive){ clearInterval(keepAlive); keepAlive=null; } }
   function startKeepAlive(){
@@ -800,6 +801,9 @@
 
     document.addEventListener("click", function(e){
       var t=e.target;
+      // A tap anywhere outside the recite control stops the recitation and returns it to
+      // "Recite" (there's otherwise no way to fully stop -- pause only toggles to resume).
+      if(speaking && !(t.closest && t.closest("#reciteGroup"))) stopListening();
       if(t.closest && t.closest("#clearFilters")){ clearAllFilters(); return; }
       var card=t.closest && t.closest("[data-slug]");
       if(card){ openPoem(card.getAttribute("data-slug")); return; }

@@ -577,7 +577,10 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 .recite-restart .btn-i { margin: 0; }
 .recite-group.on .recite-restart { display: inline-flex; }
 .recite-group.on #listenBtn { border-top-right-radius: 0; border-bottom-right-radius: 0; }
-.recite-group.on .recite-restart { border-top-left-radius: 0; border-bottom-left-radius: 0; border-left-width: 0; }
+/* restart fills to match the main button (via .is-on), with a subtle divider between them.
+   The #reader prefix out-specifies "#reader .btn--sm.is-on", which sets border-color. */
+.recite-group.on .recite-restart { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+#reader .recite-group.on .recite-restart { border-left-width: 1.5px; border-left-style: solid; border-left-color: color-mix(in srgb, #fff5ea 50%, transparent); }
 .tool-label { width: 100%; margin: 0; font-family: var(--f-type); font-size: .66rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
 .btn--sm.is-on { background: var(--brand); color: #fff; border-color: var(--brand); }
 :root[data-theme="dark"] .btn--sm.is-on { color: #10131c; }
