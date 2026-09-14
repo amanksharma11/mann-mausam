@@ -17,6 +17,8 @@
     mean: '<svg class="btn-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13M14 5l3 3-3 3"/><path d="M20 16H7M10 13l-3 3 3 3"/></svg>',
     play: '<svg class="btn-i" viewBox="0 0 24 24"><path d="M7 5v14l12-7z" fill="currentColor"/></svg>',
     stop: '<svg class="btn-i" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.6" fill="currentColor"/></svg>',
+    pause:'<svg class="btn-i" viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1.2" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.2" fill="currentColor"/></svg>',
+    restart:'<svg class="btn-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.4-5.9"/><path d="M3 4.5V9h4.5"/></svg>',
     spark:'<svg class="btn-i" viewBox="0 0 24 24"><path d="M12 2.5l1.9 6.1L20 10l-6.1 1.4L12 17.5 10.1 11.4 4 10l6.1-1.4z" fill="currentColor"/></svg>',
     share:'<svg class="btn-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="2.3"/><circle cx="18" cy="6" r="2.3"/><circle cx="18" cy="18" r="2.3"/><path d="M8.1 10.9l7.8-3.9M8.1 13.1l7.8 3.9"/></svg>',
     copy: '<svg class="btn-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>',
@@ -356,7 +358,11 @@
     var aids='<div class="tool-group"><p class="tool-label">Help me read this</p>';
     if(T.supports(p.lang)) aids+='<button class="btn btn--sm" data-aid="say" type="button">'+ICON.say+'Transliteration</button>';
     if(p.translation || (CFG.features && CFG.features.autoTranslate && p.lang!=="en")) aids+='<button class="btn btn--sm" data-aid="mean" type="button">'+ICON.mean+'Translation</button>';
-    if(CFG.features && CFG.features.recitation) aids+='<button class="btn btn--sm" id="listenBtn" type="button">'+ICON.play+'Recite</button>';
+    if(CFG.features && CFG.features.recitation) aids+=
+      '<span class="recite-group" id="reciteGroup">'+
+        '<button class="btn btn--sm" id="listenBtn" type="button">'+ICON.play+'Recite</button>'+
+        '<button class="btn btn--sm recite-restart" id="reciteRestart" type="button" title="Restart from the top" aria-label="Restart from the top">'+ICON.restart+'</button>'+
+      '</span>';
     aids+='</div>';
 
     var acts='<div class="tool-group"><p class="tool-label">Take it with you</p>';
@@ -390,6 +396,7 @@
   function wireReader(p){
     $$("#reader [data-aid]").forEach(function(b){ b.addEventListener("click",function(){ toggleAid(p,b,b.getAttribute("data-aid")); }); });
     var lb=$("#listenBtn"); if(lb) lb.addEventListener("click",function(){ toggleListen(p,lb); });
+    var rr=$("#reciteRestart"); if(rr) rr.addEventListener("click",function(){ restartRecite(); });
     var sb=$("#shareBtn"); if(sb) sb.addEventListener("click",function(){ scrollReaderTop(); share(p,sb); });
     var cb=$("#copyBtn"); if(cb) cb.addEventListener("click",function(){ scrollReaderTop(); copyPoem(p,cb); });
     var im=$(".r-image img"); if(im) im.addEventListener("error",function(){ var f=im.closest(".r-image"); if(f) f.remove(); });   // a bad image URL just disappears
@@ -491,27 +498,79 @@
     return step(0);
   }
 
-  /* ---- recitation: her recording if present, else the device voice ---- */
-  var speaking=false, keepAlive=null, audioEl=null, curUtter=null;
-  function setListenLabel(b,on){ b.innerHTML=on?(ICON.stop+"Stop"):(ICON.play+"Recite"); b.classList.toggle("reciting",on); setOn(b,on); }
+  /* ---- recitation: her recording if present, else the device voice ----
+     Supports play / pause / resume, plus a restart-from-the-top control. Audio uses the
+     <audio> element's native pause/resume; the device voice re-speaks from the current line
+     (browser TTS pause/resume is unreliable, especially on phones). */
+  var speaking=false;      // a recitation is active (playing or paused)
+  var recPaused=false;     // paused?
+  var recMode=null;        // "audio" | "tts"
+  var keepAlive=null, audioEl=null, curUtter=null, tts=null, ttsGen=0;
+
+  function reciteUI(){
+    var b=$("#listenBtn"), grp=$("#reciteGroup");
+    if(!b) return;
+    if(!speaking){ b.innerHTML=ICON.play+"Recite"; b.classList.remove("reciting"); setOn(b,false); if(grp) grp.classList.remove("on"); }
+    else if(recPaused){ b.innerHTML=ICON.play+"Resume"; b.classList.remove("reciting"); setOn(b,true); if(grp) grp.classList.add("on"); }
+    else { b.innerHTML=ICON.pause+"Pause"; b.classList.add("reciting"); setOn(b,true); if(grp) grp.classList.add("on"); }
+  }
+  function stopKeepAlive(){ if(keepAlive){ clearInterval(keepAlive); keepAlive=null; } }
+  function startKeepAlive(){
+    // keep a long device-voice recitation past a browser's internal cutoff (see note below)
+    stopKeepAlive();
+    var touch = (window.matchMedia && matchMedia("(hover: none)").matches) || navigator.maxTouchPoints>0;
+    keepAlive=setInterval(function(){
+      if(!speaking||recPaused){ stopKeepAlive(); return; }
+      if(touch){ if(speechSynthesis.paused) speechSynthesis.resume(); }
+      else if(speechSynthesis.speaking && !speechSynthesis.paused){ speechSynthesis.pause(); speechSynthesis.resume(); }
+    }, touch?4000:10000);
+  }
+
   function toggleListen(p,b){
-    if(speaking){ stopListening(b); return; }
-    scrollReaderTop();   // hear it from the top
+    if(!speaking){ startRecite(p,b); return; }
+    if(recPaused) resumeRecite(); else pauseRecite();
+  }
+  function startRecite(p,b){
+    scrollReaderTop();
     if(hasAudio(p)){   // only a real audio file; garbage goes straight to the device voice
-      // A bad audio URL can fire BOTH the error event and a play() rejection; this guard
-      // makes sure we fall back to the device voice only once.
+      recMode="audio";
       var fellBack=false;
-      function fallback(){ if(fellBack) return; fellBack=true; if(audioEl){ audioEl.pause(); audioEl=null; } speakWithBrowser(p,b,true); }
+      function fallback(){ if(fellBack) return; fellBack=true; if(audioEl){ audioEl.pause(); audioEl=null; } startTTS(p,b,true); }
       audioEl=new Audio(p.audio);
-      audioEl.addEventListener("ended",function(){ stopListening(b); });
+      audioEl.addEventListener("ended",function(){ stopListening(); });
       audioEl.addEventListener("error",fallback);
-      audioEl.play().then(function(){ if(fellBack) return; speaking=true; setListenLabel(b,true); rstatus("In her own voice.","recite"); }).catch(fallback);
+      audioEl.play().then(function(){ if(fellBack) return; speaking=true; recPaused=false; reciteUI(); rstatus("In her own voice.","recite"); }).catch(fallback);
       return;
     }
-    speakWithBrowser(p,b);
+    startTTS(p,b,false);
   }
-  function stopListening(b, keepStatus){ speaking=false; if(b) setListenLabel(b,false); else { var lb=$("#listenBtn"); if(lb) setListenLabel(lb,false); }
-    if(audioEl){ audioEl.pause(); audioEl=null; } if(window.speechSynthesis) speechSynthesis.cancel(); if(keepAlive){ clearInterval(keepAlive); keepAlive=null; } if(!keepStatus) rstatus(""); }
+  function pauseRecite(){
+    recPaused=true; stopKeepAlive();
+    if(recMode==="audio"){ if(audioEl) audioEl.pause(); }
+    else { ttsGen++; if(window.speechSynthesis) speechSynthesis.cancel(); }   // stale onends ignored; idx kept
+    reciteUI();
+  }
+  function resumeRecite(){
+    recPaused=false;
+    if(recMode==="audio"){ if(audioEl) audioEl.play(); }
+    else { ttsGen++; ttsSpeak(); startKeepAlive(); }
+    reciteUI();
+  }
+  function restartRecite(){
+    if(!speaking) return;
+    scrollReaderTop(); recPaused=false;
+    if(recMode==="audio"){ if(audioEl){ audioEl.currentTime=0; audioEl.play(); } }
+    else { ttsGen++; if(window.speechSynthesis) speechSynthesis.cancel(); tts.idx=0; ttsSpeak(); startKeepAlive(); }
+    reciteUI();
+  }
+  // full stop (poem ended, reader closed, or navigated away)
+  function stopListening(keepStatus){
+    speaking=false; recPaused=false; recMode=null; ttsGen++;
+    if(audioEl){ audioEl.pause(); audioEl=null; }
+    if(window.speechSynthesis) speechSynthesis.cancel();
+    stopKeepAlive(); reciteUI(); if(!keepStatus) rstatus("");
+  }
+
   function getVoices(){ return new Promise(function(resolve){ if(!window.speechSynthesis) return resolve([]); var v=speechSynthesis.getVoices(); if(v.length) return resolve(v);
     var settled=false; function done(){ if(settled)return; settled=true; clearInterval(poll); speechSynthesis.removeEventListener("voiceschanged",done); resolve(speechSynthesis.getVoices()); }
     speechSynthesis.addEventListener("voiceschanged",done); var poll=setInterval(function(){ if(speechSynthesis.getVoices().length) done(); },120); setTimeout(done,2500); }); }
@@ -528,51 +587,46 @@
       if(v.localService) s+=1;                           // on-device is snappier
       return s; }
     return hits.slice().sort(function(a,b){ return score(b)-score(a); })[0]||null; }
-  function speakWithBrowser(p,b,fromFallback){
-    if(!window.speechSynthesis){ stopListening(b,true); rstatus("This browser can't read text aloud. Chrome on Android or Edge on Windows can.","warn"); return; }
+  // speak the current line (tts.idx); each line's onend advances to the next. A generation
+  // token (ttsGen) invalidates the onend of any line cancelled by pause/restart/stop.
+  function ttsSpeak(){
+    if(!speaking||recPaused||!tts) return;
+    if(tts.idx>=tts.chunks.length){ stopListening(); return; }
+    var gen=ttsGen;
+    var u=new SpeechSynthesisUtterance(tts.chunks[tts.idx]); u.voice=tts.voice; u.lang=tts.voice.lang; u.rate=tts.rv;
+    u.onend=function(){ if(gen!==ttsGen||!speaking||recPaused) return; tts.idx++; ttsSpeak(); };
+    u.onerror=function(){ if(gen!==ttsGen||!speaking||recPaused) return; tts.idx++; ttsSpeak(); };   // skip a bad line
+    curUtter=u; speechSynthesis.speak(u);
+  }
+  function startTTS(p,b,fromFallback){
+    recMode="tts";
+    if(!window.speechSynthesis){ stopListening(true); rstatus("This browser can't read text aloud. Chrome on Android or Edge on Windows can.","warn"); return; }
     rstatus("Finding a voice…","recite");
     getVoices().then(function(voices){
       var voice=pickVoice(voices,p.lang);
-      if(!voice){ stopListening(b,true); rstatus(noVoiceHelp(p.lang),"warn"); return; }
+      if(!voice){ stopListening(true); rstatus(noVoiceHelp(p.lang),"warn"); return; }
       var chunks=flatLines(p.stanzas).filter(function(l){return l&&l.trim();});
-      if(!chunks.length){ stopListening(b); return; }
+      if(!chunks.length){ stopListening(); return; }
       var rate=$("#rate"); var rv=rate?parseFloat(rate.value):0.86;
-      speechSynthesis.cancel(); speaking=true; setListenLabel(b,true);
+      tts={ chunks:chunks, voice:voice, rv:rv, idx:0 };
+      speaking=true; recPaused=false; ttsGen++; speechSynthesis.cancel();
+      reciteUI();
       rstatus((fromFallback?"That recording wouldn't play, so it's read by the ":"Read by the ")+voice.name+" voice on this device.","recite");
-      // Speak one line at a time, kicking off the next from each line's onend, and keep a
-      // reference to the live utterance. Chrome drops queued utterances (only the first line
-      // plays) and garbage-collects unreferenced ones; this drives the sequence reliably.
-      var idx=0;
-      function next(){
-        if(!speaking) return;
-        if(idx>=chunks.length){ stopListening(b); return; }
-        var u=new SpeechSynthesisUtterance(chunks[idx]); u.voice=voice; u.lang=voice.lang; u.rate=rv;
-        u.onend=function(){ idx++; next(); };
-        u.onerror=function(){ idx++; next(); };   // skip a line that won't speak, carry on
-        curUtter=u;
-        speechSynthesis.speak(u);
-      }
-      next();
-      // Long poems: keep the device voice alive past a browser's internal cutoff.
-      // Desktop Chrome silently stops after ~15s; a periodic pause+resume resets that timer.
-      // On phones that same pause/resume CUTS the speech off, so there we only nudge resume()
-      // (a no-op while playing, but it recovers an auto-pause) -- never pause. This keeps a
-      // long recitation going without the mobile cut-off. (Her uploaded mp3s use <audio>, which
-      // has no such limit and is unaffected.)
-      if(keepAlive) clearInterval(keepAlive);
-      var touch = (window.matchMedia && matchMedia("(hover: none)").matches) || navigator.maxTouchPoints>0;
-      keepAlive=setInterval(function(){
-        if(!speaking){ clearInterval(keepAlive); keepAlive=null; return; }
-        if(touch){ if(speechSynthesis.paused) speechSynthesis.resume(); }
-        else if(speechSynthesis.speaking && !speechSynthesis.paused){ speechSynthesis.pause(); speechSynthesis.resume(); }
-      }, touch?4000:10000);
+      ttsSpeak();
+      // Long poems: keep the device voice alive past a browser's internal cutoff. Desktop
+      // Chrome silently stops after ~15s; a periodic pause+resume resets that timer. On phones
+      // that same trick CUTS the speech off, so there we only nudge resume() (never pause).
+      // (Her uploaded mp3s play through <audio>, which has no such limit.)
+      startKeepAlive();
     });
   }
   function noVoiceHelp(lang){ return "No "+langName(lang)+" voice on this device — open Transliteration to sound it out."; }
 
   /* ------------------------------------------------------------- share / copy */
   function poemLink(p){ return location.origin+location.pathname+"#/poem/"+p.slug; }
-  function share(p,btn){ var url=poemLink(p); var data={title:p.title,text:'"'+p.title+'", a poem by '+(CFG.poetName||"the poet"),url:url};
+  function share(p,btn){ var url=poemLink(p);
+    var r=romanTitle(p); var disp=p.title+(r?" ("+r+")":"");   // add the roman title for Bangla/Hindi
+    var data={title:disp,text:'"'+disp+'", a poem by '+(CFG.poetName||"the poet"),url:url};
     if(navigator.share){ navigator.share(data).catch(function(){}); return; }
     if(navigator.clipboard){ navigator.clipboard.writeText(url).then(function(){ flash(btn,"✓ Link copied"); }); } else prompt("Copy this link:",url); }
   function copyPoem(p,btn){ var r=romanTitle(p); var text=p.title+(r?" ("+r+")":"")+"\n\n"+plainText(p.stanzas)+"\n\nby "+(CFG.poetName||"");

@@ -482,15 +482,21 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
    title/tags never leave the top and the tools never leave the bottom -- only the poem
    scrolls between them. Vertical padding lives on the head/foot, not the panel, so the
    pinned bands cover the scrolling poem cleanly. */
-.reader-panel { position: relative; width: 100%; max-height: 92vh; max-height: 92dvh; overflow: hidden; display: flex; flex-direction: column; background: var(--card); border: 2px solid var(--ink); border-radius: var(--radius); box-shadow: var(--shadow-hard); padding: 0 clamp(1.4rem, 4vw, 2.6rem); animation: rise .3s cubic-bezier(.2,.8,.2,1); }
+/* Horizontal padding lives on the regions (not the panel) so the scrollbar sits at the
+   very edge of the card, clear of the text. */
+.reader-panel { position: relative; width: 100%; max-height: 92vh; max-height: 92dvh; overflow: hidden; display: flex; flex-direction: column; background: var(--card); border: 2px solid var(--ink); border-radius: var(--radius); box-shadow: var(--shadow-hard); padding: 0; animation: rise .3s cubic-bezier(.2,.8,.2,1); }
 .reader-content { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; width: 100%; }
 /* only the middle scrolls; fade its top/bottom edges so half-cut lines don't peek out
    above the footer or at the top clip */
-.r-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; overflow-anchor: none; padding: 0 0 .4rem;
+.r-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; overflow-anchor: none; padding: 0 clamp(1.4rem, 4vw, 2.6rem) .4rem;
   -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent 100%);
-          mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent 100%); }
+          mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent 100%);
+  scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ink) 22%, transparent) transparent; }
+.r-scroll::-webkit-scrollbar { width: 6px; }
+.r-scroll::-webkit-scrollbar-track { background: transparent; }
+.r-scroll::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--ink) 20%, transparent); border-radius: 999px; }
 .r-head { position: sticky; top: 0; z-index: 3; background: var(--card); padding: clamp(1.3rem, 3.5vw, 2.1rem) 0 .7rem; }
-.r-foot { flex: none; position: relative; z-index: 3; background: var(--card); padding: .9rem 0 clamp(1.2rem, 3.5vw, 2rem); border-top: 1.5px dashed var(--line); }
+.r-foot { flex: none; position: relative; z-index: 3; background: var(--card); padding: .9rem clamp(1.4rem, 4vw, 2.6rem) clamp(1.2rem, 3.5vw, 2rem); border-top: 1.5px dashed var(--line); }
 @keyframes fade { from { opacity: 0; } } @keyframes rise { from { opacity: 0; transform: translateY(18px); } }
 .reader-close { position: absolute; top: .8rem; right: .8rem; z-index: 5; border: 2px solid var(--ink); background: var(--paper); color: var(--ink); width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-size: 1rem; }
 .reader-close:hover { background: var(--terracotta); color: #fff; }
@@ -564,6 +570,14 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 
 .r-tools { display: grid; gap: 1rem; }
 .tool-group { display: flex; flex-wrap: wrap; gap: .55rem; align-items: center; }
+/* recite control: main play/pause button, with a restart-from-top button that joins on
+   the right while a recitation is running (segmented into one control) */
+.recite-group { display: inline-flex; align-items: stretch; }
+.recite-restart { display: none; padding-left: .6em; padding-right: .6em; }
+.recite-restart .btn-i { margin: 0; }
+.recite-group.on .recite-restart { display: inline-flex; }
+.recite-group.on #listenBtn { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.recite-group.on .recite-restart { border-top-left-radius: 0; border-bottom-left-radius: 0; border-left-width: 0; }
 .tool-label { width: 100%; margin: 0; font-family: var(--f-type); font-size: .66rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
 .btn--sm.is-on { background: var(--brand); color: #fff; border-color: var(--brand); }
 :root[data-theme="dark"] .btn--sm.is-on { color: #10131c; }
@@ -588,16 +602,17 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
    short rows instead of a tall stack. */
 @media (max-width: 640px) {
   .reader { padding: .5rem 1.25rem; }                       /* smaller side gutters -> wider content */
-  .reader-panel { max-height: 96vh; max-height: 96dvh; padding: 0 1.1rem; }
+  .reader-panel { max-height: 96vh; max-height: 96dvh; }
   .r-head { position: static; padding: 1rem 0 .5rem; }      /* header scrolls with the poem */
   /* header scrolls now, so fade the TOP edge too (not just the bottom) */
-  .r-scroll { -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+  .r-scroll { padding-left: 1.1rem; padding-right: 1.1rem;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
                       mask-image: linear-gradient(to bottom, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%); }
   .r-title { font-size: clamp(1.45rem, 6.4vw, 1.9rem); }
   .r-meta { margin: .5rem 0 .6rem; }
   .r-badges { margin: .3rem 0 .6rem; }
 
-  .r-foot { padding: .7rem 0 .85rem; }
+  .r-foot { padding: .7rem 1.1rem .85rem; }
   .tool-label { display: none; }                 /* drop "Help me read this" / "Take it with you" */
   .r-tools { display: flex; flex-wrap: wrap; gap: .5rem; }
   .tool-group { display: contents; }             /* all five buttons flow in one wrap */
