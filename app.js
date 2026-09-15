@@ -50,6 +50,13 @@
 
   /* ----------------------------------------------------------------- helpers */
   function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+  // wrap each word of a poem line in its own span so the device voice can light words up
+  // one at a time (karaoke style); words are single-spaced so charIndex maps cleanly.
+  function wordSpans(text){
+    var words=String(text||"").split(/\s+/).filter(Boolean);
+    if(!words.length) return "";
+    return words.map(function(w){ return '<span class="w">'+esc(w)+'</span>'; }).join(" ");
+  }
   function normLang(v){ v=String(v||"").trim().toLowerCase();
     if(/^(bn|bangla|bengali|বাংলা)/.test(v)) return "bn";
     if(/^(hi|hindi|हिंदी|हिन्दी)/.test(v)) return "hi";
@@ -357,7 +364,7 @@
     var romanLine = r? (p.titleEnglish? r+" · "+p.titleEnglish : r) : (p.titleEnglish||"");
     var lines="";
     p.stanzas.forEach(function(st,si){ lines+='<div class="stanza">';
-      st.forEach(function(text,li){ lines+='<p class="line" data-s="'+si+'" data-l="'+li+'"><span lang="'+p.lang+'">'+esc(text)+'</span></p>'; });
+      st.forEach(function(text,li){ lines+='<p class="line" data-s="'+si+'" data-l="'+li+'"><span lang="'+p.lang+'" class="ln">'+wordSpans(text)+'</span></p>'; });
       lines+='</div>';
     });
 
@@ -572,7 +579,7 @@
   }
   // full stop (poem ended, reader closed, or navigated away)
   function stopListening(keepStatus){
-    var hadHighlight = !!$("#poemBody .reciting-line");
+    var hadHighlight = !!$("#poemBody .reciting-word");
     speaking=false; recPaused=false; recMode=null; ttsGen++;
     if(audioEl){ audioEl.pause(); audioEl=null; }
     if(window.speechSynthesis) speechSynthesis.cancel();
@@ -596,33 +603,43 @@
       if(v.localService) s+=1;                           // on-device is snappier
       return s; }
     return hits.slice().sort(function(a,b){ return score(b)-score(a); })[0]||null; }
-  // light up the line being recited and keep it in view (device voice only -- we know the
-  // current line because we speak line by line; an mp3 gives no such position)
-  function clearHighlight(){ $$("#poemBody .reciting-line").forEach(function(el){ el.classList.remove("reciting-line"); }); }
-  function highlightLine(idx){
-    clearHighlight();
-    if(!tts||!tts.lineEls) return;
-    var el=tts.lineEls[idx]; if(!el) return;
-    el.classList.add("reciting-line");
-    var pl=$("#reader .r-scroll"); if(!pl) return;
+  // Karaoke highlight (device voice only -- we know position because we speak line by line,
+  // and onboundary tells us the word within a line; an mp3 gives no such position).
+  function clearHighlight(){ $$("#poemBody .reciting-word").forEach(function(w){ w.classList.remove("reciting-word"); }); }
+  function scrollLineIntoView(el){
+    var pl=$("#reader .r-scroll"); if(!pl||!el) return;
     var pr=pl.getBoundingClientRect(), er=el.getBoundingClientRect();
     var hd=$("#reader .r-head"); var stick=(hd&&getComputedStyle(hd).position==="sticky")?hd.offsetHeight:0;
-    if(er.top < pr.top+stick+24 || er.bottom > pr.bottom-24){   // scroll only when it drifts out of view
+    if(er.top < pr.top+stick+24 || er.bottom > pr.bottom-24){   // only when it drifts out of view
       var band=pl.clientHeight-stick;
       pl.scrollTop = Math.max(0, pl.scrollTop + (er.top-pr.top) - stick - band/2 + er.height/2);
     }
   }
-  // speak the current line (tts.idx); each line's onend advances to the next. A generation
-  // token (ttsGen) invalidates the onend of any line cancelled by pause/restart/stop.
+  function highlightWord(words, charIndex){
+    var off=0, target=null;
+    for(var i=0;i<words.length;i++){ var wl=words[i].textContent.length;
+      if(charIndex>=off && charIndex<off+wl){ target=words[i]; break; } off+=wl+1; }   // +1 for the space
+    if(!target && words.length) target=words[words.length-1];
+    if(!target) return;
+    clearHighlight(); target.classList.add("reciting-word");
+  }
+  // speak the current line (tts.idx); onboundary lights each word; each line's onend advances.
+  // A generation token (ttsGen) invalidates callbacks of a line cancelled by pause/restart/stop.
   function ttsSpeak(){
     if(!speaking||recPaused||!tts) return;
     if(tts.idx>=tts.chunks.length){ stopListening(); return; }
-    highlightLine(tts.idx);
     var gen=ttsGen;
+    var el=tts.lineEls[tts.idx];
+    var words = el ? $$(".w", el) : [];
+    clearHighlight(); scrollLineIntoView(el);
     var u=new SpeechSynthesisUtterance(tts.chunks[tts.idx]); u.voice=tts.voice; u.lang=tts.voice.lang; u.rate=tts.rv;
+    var boundaryFired=false;
+    u.onboundary=function(e){ if(gen!==ttsGen||!speaking||recPaused) return; if(e.name && e.name!=="word") return; boundaryFired=true; highlightWord(words, e.charIndex||0); };
     u.onend=function(){ if(gen!==ttsGen||!speaking||recPaused) return; tts.idx++; ttsSpeak(); };
     u.onerror=function(){ if(gen!==ttsGen||!speaking||recPaused) return; tts.idx++; ttsSpeak(); };   // skip a bad line
     curUtter=u; speechSynthesis.speak(u);
+    // fallback: if the browser doesn't report word boundaries, light the whole line's words
+    setTimeout(function(){ if(gen===ttsGen && speaking && !recPaused && !boundaryFired){ words.forEach(function(w){ w.classList.add("reciting-word"); }); } }, 550);
   }
   function startTTS(p,b,fromFallback){
     recMode="tts";
@@ -826,19 +843,46 @@
     $("#surpriseBtn").addEventListener("click", surprise);
     $("#readerPrev").addEventListener("click", function(){ goRelative(-1); });
     $("#readerNext").addEventListener("click", function(){ goRelative(1); });
-    // swipe left/right across the popup to move between poems (mainly for phones); a clearly
-    // horizontal drag navigates, while vertical drags still scroll the poem normally
+    // Swipe across the popup to move between poems (mainly for phones): the card follows the
+    // finger, then flings off and the next card slides in from the other side (Tinder-style).
+    // A clearly horizontal drag swipes; vertical drags still scroll the poem normally.
     (function(){
       var panel=$(".reader-panel"); if(!panel) return;
-      var sx=0, sy=0, ok=false;
+      var sx=0, sy=0, active=false, decided=false, horiz=false, dx=0, W=0, animating=false;
+      function tf(x, rot, op){ panel.style.transform="translateX("+x+"px) rotate("+rot+"deg)"; if(op!=null) panel.style.opacity=op; }
+      function clearTf(){ panel.style.transition=""; panel.style.transform=""; panel.style.opacity=""; }
       panel.addEventListener("touchstart", function(e){
-        if(e.touches.length!==1){ ok=false; return; }
-        ok=true; sx=e.touches[0].clientX; sy=e.touches[0].clientY;
+        if(animating || e.touches.length!==1){ active=false; return; }
+        active=true; decided=false; horiz=false; dx=0;
+        sx=e.touches[0].clientX; sy=e.touches[0].clientY; W=panel.offsetWidth||window.innerWidth;
+        panel.style.transition="";
       }, {passive:true});
-      panel.addEventListener("touchend", function(e){
-        if(!ok) return; ok=false; var t=e.changedTouches[0]; if(!t) return;
-        var dx=t.clientX-sx, dy=t.clientY-sy;
-        if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.6){ goRelative(dx<0?1:-1); }   // swipe left = next
+      panel.addEventListener("touchmove", function(e){
+        if(!active) return;
+        dx=e.touches[0].clientX-sx; var dy=e.touches[0].clientY-sy;
+        if(!decided){ if(Math.abs(dx)<8 && Math.abs(dy)<8) return; decided=true; horiz=Math.abs(dx)>Math.abs(dy)*1.2; }
+        if(horiz){ e.preventDefault(); tf(dx, dx/28, Math.max(.55, 1-Math.abs(dx)/(W*1.5))); }
+      }, {passive:false});
+      panel.addEventListener("touchend", function(){
+        if(!active) return; active=false;
+        if(!horiz){ return; }
+        var s = dx<0 ? -1 : 1;                          // swipe direction (-1 left, +1 right)
+        if(Math.abs(dx) > Math.min(120, W*0.28)){
+          animating=true;
+          panel.style.transition="transform .22s ease-out, opacity .22s ease-out";
+          tf(s*W*1.35, s*14, 0);                        // fling off in the swipe direction
+          setTimeout(function(){
+            goRelative(s<0 ? 1 : -1);                    // swipe left = next
+            panel.style.transition=""; tf(-s*W*1.35, -s*14, 0);   // place next card on the far side
+            void panel.offsetWidth;                     // reflow so the next transition runs
+            panel.style.transition="transform .28s cubic-bezier(.2,.8,.2,1), opacity .28s ease";
+            tf(0,0,1);                                  // slide it in to centre
+            setTimeout(function(){ clearTf(); animating=false; }, 300);
+          }, 220);
+        } else {
+          panel.style.transition="transform .25s ease, opacity .25s ease"; tf(0,0,1);   // spring back
+          setTimeout(function(){ panel.style.transition=""; }, 260);
+        }
       }, {passive:true});
     })();
 
