@@ -416,8 +416,24 @@
   }
   function rstatus(msg,tone){ var s=$("#rStatus"); if(!s) return; s.textContent=msg||""; if(tone) s.setAttribute("data-tone",tone); else s.removeAttribute("data-tone"); }
   // reading the popup back to the top (most tools) or down to a spot (a bulk translation)
-  function scrollReaderTop(){ var pl=$("#reader .r-scroll"); if(pl) pl.scrollTop=0; }
-  function scrollReaderTo(el){ var pl=$("#reader .r-scroll"), hd=$("#reader .r-head"); if(!pl||!el) return;
+  // A gentle, controlled-speed scroll so the eye can follow the reciting line (native
+  // "smooth" is browser-timed and often too abrupt for short hops). Cancelable.
+  var scrollAnim=null;
+  function cancelScrollAnim(){ if(scrollAnim){ cancelAnimationFrame(scrollAnim); scrollAnim=null; } }
+  function animScrollTo(pl, to, dur){
+    cancelScrollAnim();
+    to=Math.max(0, Math.min(to, pl.scrollHeight-pl.clientHeight));
+    var from=pl.scrollTop, delta=to-from;
+    if(Math.abs(delta)<2){ pl.scrollTop=to; return; }
+    dur=dur||650; var t0=null;
+    function ease(x){ return x<0.5 ? 2*x*x : 1-Math.pow(-2*x+2,2)/2; }   // easeInOutQuad
+    function frame(t){ if(t0===null) t0=t; var p=Math.min(1,(t-t0)/dur);
+      pl.scrollTop=from+delta*ease(p);
+      if(p<1) scrollAnim=requestAnimationFrame(frame); else scrollAnim=null; }
+    scrollAnim=requestAnimationFrame(frame);
+  }
+  function scrollReaderTop(){ cancelScrollAnim(); var pl=$("#reader .r-scroll"); if(pl) pl.scrollTop=0; }
+  function scrollReaderTo(el){ cancelScrollAnim(); var pl=$("#reader .r-scroll"), hd=$("#reader .r-head"); if(!pl||!el) return;
     // only offset for the header when it's actually pinned (on phones it scrolls away)
     var stick = (hd && getComputedStyle(hd).position==="sticky") ? hd.offsetHeight : 0;
     var top = el.getBoundingClientRect().top - pl.getBoundingClientRect().top + pl.scrollTop - stick - 12;
@@ -468,7 +484,8 @@
     eachLine(function(el,s,l){
       var st=p.stanzas[s]; var src=st&&st[l]; if(!src||!src.trim()) return;
       var text = useAuthor ? ((p.translit[s]&&p.translit[s][l])||T.line(src)) : T.line(src);
-      var span=document.createElement("span"); span.className="aid-say"; span.lang="en"; span.textContent=text; el.appendChild(span);
+      // words wrapped so recitation can pop the matching transliteration word in step
+      var span=document.createElement("span"); span.className="aid-say"; span.lang="en"; span.innerHTML=wordSpans(text); el.appendChild(span);
     });
     if(useAuthor) aidNote("sayNote", "The poet's own transliteration, in English letters.", "translit");
     else aidNote("sayNote", "Transliterated by the site into English letters, so you can sound out the words.", "translit");
@@ -612,16 +629,15 @@
     var hd=$("#reader .r-head"); var stick=(hd&&getComputedStyle(hd).position==="sticky")?hd.offsetHeight:0;
     if(er.top < pr.top+stick+24 || er.bottom > pr.bottom-24){   // only when it drifts out of view
       var band=pl.clientHeight-stick;
-      pl.scrollTop = Math.max(0, pl.scrollTop + (er.top-pr.top) - stick - band/2 + er.height/2);
+      animScrollTo(pl, pl.scrollTop + (er.top-pr.top) - stick - band/2 + er.height/2, 700);
     }
   }
-  function highlightWord(words, charIndex){
-    var off=0, target=null;
+  // which word (index) covers this character position in the line's text
+  function wordIndexAt(words, charIndex){
+    var off=0;
     for(var i=0;i<words.length;i++){ var wl=words[i].textContent.length;
-      if(charIndex>=off && charIndex<off+wl){ target=words[i]; break; } off+=wl+1; }   // +1 for the space
-    if(!target && words.length) target=words[words.length-1];
-    if(!target) return;
-    clearHighlight(); target.classList.add("reciting-word");
+      if(charIndex>=off && charIndex<off+wl) return i; off+=wl+1; }   // +1 for the space
+    return words.length ? words.length-1 : -1;
   }
   // speak the current line (tts.idx); onboundary lights each word; each line's onend advances.
   // A generation token (ttsGen) invalidates callbacks of a line cancelled by pause/restart/stop.
@@ -630,8 +646,16 @@
     if(tts.idx>=tts.chunks.length){ stopListening(); return; }
     var gen=ttsGen;
     var el=tts.lineEls[tts.idx];
-    var words = el ? $$(".w", el) : [];
+    var words = el ? $$(".ln .w", el) : [];   // the poem's own words (not the aid spans)
     clearHighlight(); scrollLineIntoView(el);
+    // Pop the poem word i and, if the site's transliteration is showing, its matching word.
+    // Transliteration words are looked up live so toggling it on mid-recitation is picked up.
+    function light(i){
+      clearHighlight();
+      if(words[i]) words[i].classList.add("reciting-word");
+      var tw = el ? $$(".aid-say .w", el) : [];
+      if(tw[i]) tw[i].classList.add("reciting-word");
+    }
     var u=new SpeechSynthesisUtterance(tts.chunks[tts.idx]); u.voice=tts.voice; u.lang=tts.voice.lang; u.rate=tts.rv;
     var boundaryFired=false, wt=null, wi=0;
     function stopTimer(){ if(wt){ clearTimeout(wt); wt=null; } }
@@ -640,11 +664,11 @@
     function estimate(){
       if(gen!==ttsGen||!speaking||recPaused||boundaryFired){ stopTimer(); return; }
       if(wi>=words.length){ stopTimer(); return; }
-      clearHighlight(); words[wi].classList.add("reciting-word");
+      light(wi);
       var wl=words[wi].textContent.length; wi++;
-      wt=setTimeout(estimate, Math.max(200, wl*72)/(tts.rv||0.86));
+      wt=setTimeout(estimate, Math.max(200, wl*72)/(tts.rv||0.72));
     }
-    u.onboundary=function(e){ if(gen!==ttsGen||!speaking||recPaused) return; if(e.name && e.name!=="word") return; boundaryFired=true; stopTimer(); highlightWord(words, e.charIndex||0); };
+    u.onboundary=function(e){ if(gen!==ttsGen||!speaking||recPaused) return; if(e.name && e.name!=="word") return; boundaryFired=true; stopTimer(); light(wordIndexAt(words, e.charIndex||0)); };
     u.onend=function(){ stopTimer(); if(gen!==ttsGen||!speaking||recPaused) return; tts.idx++; ttsSpeak(); };
     u.onerror=function(){ stopTimer(); if(gen!==ttsGen||!speaking||recPaused) return; tts.idx++; ttsSpeak(); };   // skip a bad line
     curUtter=u; speechSynthesis.speak(u);
@@ -663,7 +687,7 @@
       var lineEls=$$("#poemBody .line").filter(function(el){ var sp=el.querySelector("span"); return sp && sp.textContent.trim(); });
       var chunks=lineEls.map(function(el){ return el.querySelector("span").textContent.trim(); });
       if(!chunks.length){ stopListening(); return; }
-      var rate=$("#rate"); var rv=rate?parseFloat(rate.value):0.86;
+      var rate=$("#rate"); var rv=rate?parseFloat(rate.value):0.72;   // gentle, unhurried pace for poetry
       tts={ chunks:chunks, lineEls:lineEls, voice:voice, rv:rv, idx:0 };
       speaking=true; recPaused=false; ttsGen++; speechSynthesis.cancel();
       reciteUI();
