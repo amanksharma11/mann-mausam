@@ -633,13 +633,23 @@
     var words = el ? $$(".w", el) : [];
     clearHighlight(); scrollLineIntoView(el);
     var u=new SpeechSynthesisUtterance(tts.chunks[tts.idx]); u.voice=tts.voice; u.lang=tts.voice.lang; u.rate=tts.rv;
-    var boundaryFired=false;
-    u.onboundary=function(e){ if(gen!==ttsGen||!speaking||recPaused) return; if(e.name && e.name!=="word") return; boundaryFired=true; highlightWord(words, e.charIndex||0); };
-    u.onend=function(){ if(gen!==ttsGen||!speaking||recPaused) return; tts.idx++; ttsSpeak(); };
-    u.onerror=function(){ if(gen!==ttsGen||!speaking||recPaused) return; tts.idx++; ttsSpeak(); };   // skip a bad line
+    var boundaryFired=false, wt=null, wi=0;
+    function stopTimer(){ if(wt){ clearTimeout(wt); wt=null; } }
+    // Fallback for voices that don't report word boundaries: advance ONE word at a time by a
+    // rough estimate, so it's still word-by-word (never the whole line -- that merges the words).
+    function estimate(){
+      if(gen!==ttsGen||!speaking||recPaused||boundaryFired){ stopTimer(); return; }
+      if(wi>=words.length){ stopTimer(); return; }
+      clearHighlight(); words[wi].classList.add("reciting-word");
+      var wl=words[wi].textContent.length; wi++;
+      wt=setTimeout(estimate, Math.max(200, wl*72)/(tts.rv||0.86));
+    }
+    u.onboundary=function(e){ if(gen!==ttsGen||!speaking||recPaused) return; if(e.name && e.name!=="word") return; boundaryFired=true; stopTimer(); highlightWord(words, e.charIndex||0); };
+    u.onend=function(){ stopTimer(); if(gen!==ttsGen||!speaking||recPaused) return; tts.idx++; ttsSpeak(); };
+    u.onerror=function(){ stopTimer(); if(gen!==ttsGen||!speaking||recPaused) return; tts.idx++; ttsSpeak(); };   // skip a bad line
     curUtter=u; speechSynthesis.speak(u);
-    // fallback: if the browser doesn't report word boundaries, light the whole line's words
-    setTimeout(function(){ if(gen===ttsGen && speaking && !recPaused && !boundaryFired){ words.forEach(function(w){ w.classList.add("reciting-word"); }); } }, 550);
+    // if no real word boundary arrives shortly, drive the estimated word-by-word highlight
+    setTimeout(function(){ if(gen===ttsGen && speaking && !recPaused && !boundaryFired){ wi=0; estimate(); } }, 280);
   }
   function startTTS(p,b,fromFallback){
     recMode="tts";

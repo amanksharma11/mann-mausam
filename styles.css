@@ -545,13 +545,13 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 .r-meta .tag { font-family: var(--f-type); background: color-mix(in srgb, var(--marigold) 18%, transparent); padding: .15em .55em; border-radius: 999px; }
 
 /* poem body with per-line reading aids appended beneath each line */
-.poem-body { font-size: clamp(1.15rem, 1rem + 1vw, 1.5rem); margin: 0; overflow-wrap: anywhere; }
+.poem-body { font-size: clamp(1.15rem, 1rem + 1vw, 1.5rem); margin: 0; padding-top: .45rem; overflow-wrap: anywhere; }
 .poem-body.lang-bn { font-family: var(--f-bn); } .poem-body.lang-hi { font-family: var(--f-hi); }
 .stanza { margin: 0 0 1.6rem; } .stanza:last-child { margin-bottom: 0; }
 .line { margin: 0 0 .15rem; }
 /* karaoke: each word is its own span; the one being recited pops up and changes colour */
 .poem-body .w { display: inline-block; transition: transform .14s ease, color .14s ease, text-shadow .14s ease; transform-origin: center bottom; }
-.poem-body .w.reciting-word { color: var(--accent-lang); transform: translateY(-3px) scale(1.14); text-shadow: 0 3px 10px color-mix(in srgb, var(--accent-lang) 35%, transparent); }
+.poem-body .w.reciting-word { color: var(--accent-lang); transform: translateY(-2px) scale(1.1); text-shadow: 0 2px 7px color-mix(in srgb, var(--accent-lang) 30%, transparent); }
 .aid-say, .aid-mean { display: block; font-family: var(--f-body); }
 .aid-say  { font-size: .66em; font-style: italic; color: var(--c-transliteration); line-height: 1.4; padding-left: .8rem; border-left: 2px solid var(--c-transliteration); margin-top: .1rem; }
 .aid-mean { font-size: .7em; color: var(--c-translation); line-height: 1.45; padding-left: .8rem; border-left: 2px solid var(--c-translation); margin-top: .1rem; }
@@ -611,14 +611,15 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
   .reader-panel { max-height: 96vh; max-height: 96dvh; }
   .r-head { position: static; padding: 1rem 0 .5rem; }      /* header scrolls with the poem */
   /* header scrolls now, so fade the TOP edge too (not just the bottom) */
-  .r-scroll { padding-left: 1.1rem; padding-right: 1.1rem;
+  /* wider side padding so the poem clears the prev/next buttons that straddle the edges */
+  .r-scroll { padding-left: 1.7rem; padding-right: 1.7rem;
     -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
                       mask-image: linear-gradient(to bottom, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%); }
   .r-title { font-size: clamp(1.45rem, 6.4vw, 1.9rem); }
   .r-meta { margin: .5rem 0 .6rem; }
   .r-badges { margin: .3rem 0 .6rem; }
 
-  .r-foot { padding: .7rem 1.1rem .85rem; }
+  .r-foot { padding: .7rem 1.7rem .85rem; }
   .tool-label { display: none; }                 /* drop "Help me read this" / "Take it with you" */
   .r-tools { display: flex; flex-wrap: wrap; gap: .5rem; }
   .tool-group { display: contents; }             /* all five buttons flow in one wrap */
