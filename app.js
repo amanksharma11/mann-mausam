@@ -43,7 +43,7 @@
     { slug:"lautna", title:"लौटना", title_roman:"Lautna", title_english:"Returning", lang:"hi", date:"2025-08-30", tags:"घर वापसी, स्मृति",
       poem:"शाम की गली में एक दीया जलता है\nकिसी के लौटने की आस लिये\n\nमैं भी चलता हूँ उसी रास्ते पर\nअपने ही पैरों के निशान लिये",
       translation_en:"In the evening lane a small lamp burns,\nholding the hope that someone will return.\n\nI walk that same road myself,\ncarrying the prints of my own feet." },
-    { slug:"afternoon-light", title:"Afternoon Light", title_roman:"", title_english:"", lang:"en", date:"2026-01-15", tags:"Memory, Home",
+    { slug:"afternoon-light", title:"Afternoon Light", title_roman:"", title_english:"Afternoon Light", lang:"en", date:"2026", tags:"Memory, Home",
       poem:"The afternoon leans on the veranda rail,\ncounting the years in flakes of paint.\n\nSomewhere a radio remembers a song\nyour grandmother knew by heart.",
       translation_en:"" }
   ];
@@ -79,12 +79,50 @@
   function flatLines(stanzas){ var o=[]; stanzas.forEach(function(st){ st.forEach(function(l){ o.push(l); }); }); return o; }
   function plainText(stanzas){ return stanzas.map(function(st){return st.join("\n");}).join("\n\n"); }
 
+  /* ---- forgiving date parsing ----
+     The date cell may be a full date, a month + year, or just a year -- typed in any of the
+     usual ways. This never throws: an unrecognised value is kept and shown as typed, so one
+     odd date can't drop a poem or trip the whole load. Returns { sort, disp, prec } where
+     `sort` is a comparable YYYY-MM-DD key (missing parts padded with 00). */
+  var MONTH_NAMES=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var MONTHS={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12,
+    january:1,february:2,march:3,april:4,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
+  function pad2(n){ n=String(n|0); return n.length<2?"0"+n:n; }
+  function parseDate(raw){
+    var s=String(raw==null?"":raw).trim(); if(!s) return null;
+    var y=0,m=0,d=0,prec="raw",x;
+    if(x=s.match(/^Date\((\d{4}),(\d{1,2})(?:,(\d{1,2}))?/i)){ y=+x[1]; m=+x[2]+1; d=x[3]?+x[3]:0; prec=x[3]?"day":"month"; }      // gviz serial
+    else if(x=s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/)){ y=+x[1]; m=+x[2]; d=+x[3]; prec="day"; }                        // 2025-08-30
+    else if(x=s.match(/^(\d{4})[-\/.](\d{1,2})$/)){ y=+x[1]; m=+x[2]; prec="month"; }                                             // 2025-08
+    else if(x=s.match(/^([A-Za-z]{3,9})\.?\s+(\d{4})$/) && MONTHS[x[1].toLowerCase()]){ m=MONTHS[x[1].toLowerCase()]; y=+x[2]; prec="month"; }     // August 2025
+    else if(x=s.match(/^(\d{1,2})\s+([A-Za-z]{3,9})\.?,?\s+(\d{4})$/) && MONTHS[x[2].toLowerCase()]){ d=+x[1]; m=MONTHS[x[2].toLowerCase()]; y=+x[3]; prec="day"; }  // 30 August 2025
+    else if(x=s.match(/^([A-Za-z]{3,9})\.?\s+(\d{1,2}),?\s+(\d{4})$/) && MONTHS[x[1].toLowerCase()]){ m=MONTHS[x[1].toLowerCase()]; d=+x[2]; y=+x[3]; prec="day"; }  // August 30, 2025
+    else if(x=s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})$/)){ var a=+x[1],b=+x[2]; y=+x[3]; if(a>12){ d=a; m=b; } else if(b>12){ m=a; d=b; } else { d=a; m=b; } prec="day"; }   // 30/8/2025 (day-first when ambiguous)
+    else if(x=s.match(/^(\d{4})$/)){ y=+x[1]; prec="year"; }                                                                      // 2025
+    else { var dt=new Date(s); if(!isNaN(dt)){ y=dt.getFullYear(); m=dt.getMonth()+1; d=dt.getDate(); prec="day"; } }             // last resort
+    if(!y || y<1000 || y>3000) return { sort:"", disp:s, prec:"raw" };   // unknown: keep the row, show as typed
+    if(m<1||m>12) m=0; if(d<1||d>31) d=0;
+    var disp = prec==="year" ? String(y) : (MONTH_NAMES[(m||1)-1]+" "+y);   // UI shows month + year (day omitted), matching the old format
+    return { sort: pad2(y)+"-"+pad2(m)+"-"+pad2(d), disp: disp, prec: prec };
+  }
+
   /* Bangla/Hindi titles carry romanisation so non-readers have something to say */
   function romanTitle(p){
     if(p.lang==="en") return "";
     if(p.titleRoman) return p.titleRoman;
     if(T.supports(p.lang)){ return T.line(p.title).replace(/\b[a-z]/g,function(c){return c.toUpperCase();}); }
     return "";
+  }
+  /* The line shown under the title (romanisation + English title). For Bangla/Hindi it's the
+     roman reading then the English title; for English poems it shows whatever the title_roman /
+     title_english columns hold (so the card/reader aren't cramped for those, matching the others).
+     Parts are de-duplicated so an identical value never prints twice. */
+  function subLine(p){
+    var parts;
+    if(p.lang==="en"){ parts=[p.titleRoman, p.titleEnglish]; }
+    else { parts=[romanTitle(p), p.titleEnglish]; }
+    parts=parts.map(function(s){ return String(s||"").trim(); }).filter(Boolean);
+    return uniq(parts).join(" · ");
   }
 
   /* ---- CSV parsing (quoted fields with newlines/commas survive) ---- */
@@ -143,6 +181,9 @@
       translit: translit,
       translation: (lang==="en") ? null : (translation? { en: translation } : null)
     };
+    var dp=parseDate(raw.date);                       // forgiving: any format, never throws
+    p.dateSort = dp? dp.sort : "";                    // comparable key for ordering (may be "")
+    p.dateDisp = dp? dp.disp : "";                    // human label for the reader header
     // Also index the AUTO-generated romanisation (title, body, tags) so a poem in Bangla/Hindi
     // is searchable by its roman spelling even when the sheet has no title_roman.
     var indic = (lang!=="en" && T.supports(lang));
@@ -163,8 +204,14 @@
 
   function poemsFromCSV(t){
     if(/^\s*</.test(t)) throw new Error("got a web page, not CSV (is the sheet shared as 'Anyone with the link'?)");
-    var poems=rowsToRaw(parseCSV(t)).map(buildPoem);
-    if(!poems.length) throw new Error("no usable rows");
+    // Build poems one row at a time so a single corrupt row is skipped, not the whole sheet.
+    var raws=rowsToRaw(parseCSV(t)), poems=[], skipped=0;
+    for(var i=0;i<raws.length;i++){
+      try{ poems.push(buildPoem(raws[i])); }
+      catch(e){ skipped++; console.warn("Skipped a poem row ("+(e&&e.message||e)+"): ", raws[i]&&raws[i].title); }
+    }
+    if(skipped) console.warn(skipped+" poem row(s) were skipped; the rest loaded normally.");
+    if(!poems.length) throw new Error("no usable rows");   // only fall back when NOTHING loaded
     return poems;
   }
   function showSamples(msg){ POEMS=SAMPLE_ROWS.map(buildPoem); sortPoems(); showSourceNote(msg); afterLoad(); }
@@ -195,9 +242,10 @@
       });
   }
   function sortPoems(){ POEMS.sort(function(a,b){
-    if(!a.date&&!b.date) return a._rand-b._rand;   // undated: random among themselves
-    if(!a.date) return 1; if(!b.date) return -1;   // undated sink to the end
-    var c=b.date.localeCompare(a.date);            // newest first
+    var ad=a.dateSort||"", bd=b.dateSort||"";
+    if(!ad&&!bd) return a._rand-b._rand;           // undated / unrecognised: random among themselves
+    if(!ad) return 1; if(!bd) return -1;           // those sink to the end
+    var c=bd.localeCompare(ad);                    // newest first (YYYY-MM-DD keys compare cleanly)
     return c!==0 ? c : (a._rand-b._rand);          // same date: random within
   }); }
   function showSourceNote(html){ var n=$("#sourceNote"); n.innerHTML=html; n.hidden=false; }
@@ -265,7 +313,7 @@
            (hasImage(p)?'<span class="badge badge--img">'+ICON.bImg+'image</span>':'');
   }
   function cardHTML(p){
-    var r=romanTitle(p);
+    var r=subLine(p);
     return '<button class="poem-card lang-'+p.lang+' reveal" data-slug="'+esc(p.slug)+'">'+
       '<span class="pc-lang '+p.lang+'">'+esc(langName(p.lang))+'</span>'+
       '<h3>'+esc(p.title)+'</h3>'+
@@ -308,7 +356,7 @@
   function renderPotd(){
     var p=poemOfTheDay(); if(!p){ $("#potdWrap").hidden=true; return; }
     $("#potdWrap").hidden=false;
-    var r=romanTitle(p);
+    var r=subLine(p);
     var verse=p.stanzas.slice(0,2).map(function(st){return st.join("\n");}).join("\n\n");
     $("#potd").innerHTML='<div class="potd-card reveal">'+
       '<div class="potd-side">Today’s poem</div>'+
@@ -360,8 +408,7 @@
   function userClose(){ var wasPoemHash=/^#\/poem\//.test(location.hash); hideReader(); if(wasPoemHash) history.replaceState(null,"", location.pathname+location.search); }
 
   function readerHTML(p){
-    var r=romanTitle(p);
-    var romanLine = r? (p.titleEnglish? r+" · "+p.titleEnglish : r) : (p.titleEnglish||"");
+    var romanLine = subLine(p);
     var lines="";
     p.stanzas.forEach(function(st,si){ lines+='<div class="stanza">';
       st.forEach(function(text,li){ lines+='<p class="line" data-s="'+si+'" data-l="'+li+'"><span lang="'+p.lang+'" class="ln">'+wordSpans(text)+'</span></p>'; });
@@ -387,7 +434,7 @@
       // Only this scrolls; its top/bottom edges are faded so half-cut lines don't peek.
       '<div class="r-scroll">'+
         '<div class="r-head">'+
-          '<span class="r-lang lang-'+p.lang+'">'+esc(langName(p.lang))+(p.date?' · '+esc(formatDate(p.date)):'')+'</span>'+
+          '<span class="r-lang lang-'+p.lang+'">'+esc(langName(p.lang))+(p.dateDisp?' · '+esc(p.dateDisp):'')+'</span>'+
           '<h1 class="r-title lang-'+p.lang+'" id="readerTitle">'+esc(p.title)+'</h1>'+
           (romanLine?'<p class="r-roman">'+esc(romanLine)+'</p>':'')+
           (p.tags.length?'<div class="r-meta">'+p.tags.map(function(t){return '<span class="tag">'+tagLabel(t)+'</span>';}).join("")+'</div>':'')+
@@ -404,7 +451,6 @@
         '<p class="r-status" id="rStatus" role="status" aria-live="polite"></p>'+
       '</div>';
   }
-  function formatDate(iso){ if(!iso) return ""; var d=new Date(iso.length===10?iso+"T00:00:00":iso); if(isNaN(d)) return iso; return d.toLocaleDateString(undefined,{year:"numeric",month:"long"}); }
 
   function wireReader(p){
     $$("#reader [data-aid]").forEach(function(b){ b.addEventListener("click",function(){ toggleAid(p,b,b.getAttribute("data-aid")); }); });
@@ -485,7 +531,10 @@
       var st=p.stanzas[s]; var src=st&&st[l]; if(!src||!src.trim()) return;
       var text = useAuthor ? ((p.translit[s]&&p.translit[s][l])||T.line(src)) : T.line(src);
       // words wrapped so recitation can pop the matching transliteration word in step
-      var span=document.createElement("span"); span.className="aid-say"; span.lang="en"; span.innerHTML=wordSpans(text); el.appendChild(span);
+      var span=document.createElement("span"); span.className="aid-say"; span.lang="en"; span.innerHTML=wordSpans(text);
+      // transliteration always sits directly under the poem line, above any translation,
+      // regardless of which aid was switched on first
+      var mean=el.querySelector(".aid-mean"); if(mean) el.insertBefore(span, mean); else el.appendChild(span);
     });
     if(useAuthor) aidNote("sayNote", "The poet's own transliteration, in English letters.", "translit");
     else aidNote("sayNote", "Transliterated by the site into English letters, so you can sound out the words.", "translit");
@@ -668,9 +717,22 @@
       var wl=words[wi].textContent.length; wi++;
       wt=setTimeout(estimate, Math.max(200, wl*72)/(tts.rv||0.72));
     }
+    var started=false, t0=Date.now();
+    // Did this utterance actually speak? True if the engine said so (onstart/onboundary), if the
+    // estimate timer advanced, or if enough time simply passed. A PHANTOM end/error (Chrome
+    // dropping a fresh utterance right after cancel()) fires within a few ms with none of these.
+    function played(){ return started || boundaryFired || wi>0 || (Date.now()-t0) > 250; }
+    // A real end advances to the next line; a phantom one retries the SAME line instead of
+    // skipping it (skipping used to race idx to the end and silently stop the whole poem).
+    function done(){
+      stopTimer(); if(gen!==ttsGen||!speaking||recPaused) return;
+      if(!played() && (tts._tries||0)<4){ tts._tries=(tts._tries||0)+1; setTimeout(function(){ if(gen===ttsGen&&speaking&&!recPaused) ttsSpeak(); }, 90); return; }
+      tts._tries=0; tts.idx++; ttsSpeak();
+    }
+    u.onstart=function(){ started=true; tts._tries=0; };
     u.onboundary=function(e){ if(gen!==ttsGen||!speaking||recPaused) return; if(e.name && e.name!=="word") return; boundaryFired=true; stopTimer(); light(wordIndexAt(words, e.charIndex||0)); };
-    u.onend=function(){ stopTimer(); if(gen!==ttsGen||!speaking||recPaused) return; tts.idx++; ttsSpeak(); };
-    u.onerror=function(){ stopTimer(); if(gen!==ttsGen||!speaking||recPaused) return; tts.idx++; ttsSpeak(); };   // skip a bad line
+    u.onend=done;
+    u.onerror=done;   // canceled/interrupted/etc: retry rather than kill the recitation
     curUtter=u; speechSynthesis.speak(u);
     // if no real word boundary arrives shortly, drive the estimated word-by-word highlight
     setTimeout(function(){ if(gen===ttsGen && speaking && !recPaused && !boundaryFired){ wi=0; estimate(); } }, 280);
@@ -691,7 +753,7 @@
       tts={ chunks:chunks, lineEls:lineEls, voice:voice, rv:rv, idx:0 };
       speaking=true; recPaused=false; ttsGen++; speechSynthesis.cancel();
       reciteUI();
-      rstatus((fromFallback?"That recording wouldn't play, so it's read by the ":"Read by the ")+voice.name+" voice on this device.","recite");
+      rstatus((fromFallback?"That recording wouldn't play, so it's read by your device's ":"Read by your device's ")+langName(p.lang)+" voice.","recite");
       ttsSpeak();
       // Long poems: keep the device voice alive past a browser's internal cutoff. Desktop
       // Chrome silently stops after ~15s; a periodic pause+resume resets that timer. On phones
@@ -700,7 +762,7 @@
       startKeepAlive();
     });
   }
-  function noVoiceHelp(lang){ return "No "+langName(lang)+" voice on this device — open Transliteration to sound it out."; }
+  function noVoiceHelp(lang){ return "No "+langName(lang)+" voice on this device. Open Transliteration to sound out the words."; }
 
   /* ------------------------------------------------------------- share / copy */
   function poemLink(p){ return location.origin+location.pathname+"#/poem/"+p.slug; }

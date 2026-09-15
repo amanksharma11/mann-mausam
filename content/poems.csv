@@ -1,5 +1,5 @@
 slug_link,title,title_roman,title_english,language,date,show_on_website,poem_text,translation_english,transliteration,tags,audio,image,note
-nodir-kache,নদীর কাছে,Nodir Kache,By the River,bn,2026-04-18,yes,"সন্ধ্যা নামে ধীরে নদীর বুকে
+nodir-kache,নদীর কাছে,Nodir Kache,By the River,bn,4/18/2026,yes,"সন্ধ্যা নামে ধীরে নদীর বুকে
 জলের ভাঁজে লুকোনো পুরোনো সুর
 
 আমি বসে থাকি ঘাটের সিঁড়িতে
@@ -8,7 +8,7 @@ an old tune hidden in the folds of the water.
 
 I sit on the steps of the ghat
 while memories drift, and travel far away.",,"প্রকৃতি, স্মৃতি",,,
-shohorer-brishti,শহরের বৃষ্টি,Shohorer Brishti,Rain in the City,bn,2026-02-09,yes,"ইটের দেয়ালে বৃষ্টির আঙুল
+shohorer-brishti,শহরের বৃষ্টি,Shohorer Brishti,Rain in the City,bn,2/9/2026,yes,"ইটের দেয়ালে বৃষ্টির আঙুল
 লিখে যায় কারও না-বলা চিঠি
 
 ছাদের কার্নিশে জমে থাকে জল
@@ -17,7 +17,7 @@ write out someone's unspoken letter.
 
 Water gathers along the ledge of the roof,
 and so does the soil we left behind.",,"শহর, বৃষ্টি",,,
-mayer-haat,মায়ের হাত,Mayer Haat,My Mother's Hands,bn,2025-11-23,yes,"হলুদ শাড়ির ভাঁজে রোদের গন্ধ
+mayer-haat,মায়ের হাত,Mayer Haat,My Mother's Hands,bn,11/23/2025,yes,"হলুদ শাড়ির ভাঁজে রোদের গন্ধ
 উনুনের পাশে বসে থাকা দুপুর
 
 সেই হাতে ছিল সমস্ত পৃথিবী
@@ -26,7 +26,7 @@ an afternoon spent sitting beside the stove.
 
 Those hands once held the whole world.
 Now only a photograph, silent, far away.",,"মা, স্মৃতি",,,
-lautna,लौटना,Lautna,Returning,hi,2025-08-30,yes,"शाम की गली में एक दीया जलता है
+lautna,लौटना,Lautna,Returning,hi,8/30/2025,yes,"शाम की गली में एक दीया जलता है
 किसी के लौटने की आस लिये
 
 मैं भी चलता हूँ उसी रास्ते पर
@@ -35,8 +35,9 @@ holding the hope that someone will return.
 
 I walk that same road myself,
 carrying the prints of my own feet.",,"घर वापसी, स्मृति",,,
-afternoon-light,Afternoon Light,,,en,2026-01-15,yes,"The afternoon leans on the veranda rail,
+afternoon-light,Afternoon Light,,,en,1/15/2026,yes,"The afternoon leans on the veranda rail,
 counting the years in flakes of paint.
 
 Somewhere a radio remembers a song
 your grandmother knew by heart.",,,"Memory, Home",,,
+fallback-sheet,fallback sheet,fallback sheet,fallback sheet,en,1/15/2026,yes,fallback sheet,,,fallback_sheet,,,
