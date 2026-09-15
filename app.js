@@ -100,7 +100,7 @@
     else if(x=s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})$/)){ var a=+x[1],b=+x[2]; y=+x[3]; if(a>12){ d=a; m=b; } else if(b>12){ m=a; d=b; } else { d=a; m=b; } prec="day"; }   // 30/8/2025 (day-first when ambiguous)
     else if(x=s.match(/^(\d{4})$/)){ y=+x[1]; prec="year"; }                                                                      // 2025
     else { var dt=new Date(s); if(!isNaN(dt)){ y=dt.getFullYear(); m=dt.getMonth()+1; d=dt.getDate(); prec="day"; } }             // last resort
-    if(!y || y<1000 || y>3000) return { sort:"", disp:s, prec:"raw" };   // unknown: keep the row, show as typed
+    if(!y || y<1000 || y>3000) return { sort:"", disp:"", prec:"raw" };   // not a real date: keep the row, but show no date (treated like blank)
     if(m<1||m>12) m=0; if(d<1||d>31) d=0;
     var disp = prec==="year" ? String(y) : (MONTH_NAMES[(m||1)-1]+" "+y);   // UI shows month + year (day omitted), matching the old format
     return { sort: pad2(y)+"-"+pad2(m)+"-"+pad2(d), disp: disp, prec: prec };
