@@ -548,7 +548,9 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 .poem-body { font-size: clamp(1.15rem, 1rem + 1vw, 1.5rem); margin: 0; overflow-wrap: anywhere; }
 .poem-body.lang-bn { font-family: var(--f-bn); } .poem-body.lang-hi { font-family: var(--f-hi); }
 .stanza { margin: 0 0 1.6rem; } .stanza:last-child { margin-bottom: 0; }
-.line { margin: 0 0 .15rem; }
+.line { margin: 0 0 .15rem; border-radius: 8px; transition: transform .2s ease; transform-origin: left center; }
+/* the line currently being recited: a warm highlight, gently raised */
+.line.reciting-line { background: color-mix(in srgb, var(--marigold) 24%, transparent); box-shadow: 0 0 0 6px color-mix(in srgb, var(--marigold) 24%, transparent); transform: scale(1.025); }
 .aid-say, .aid-mean { display: block; font-family: var(--f-body); }
 .aid-say  { font-size: .66em; font-style: italic; color: var(--c-transliteration); line-height: 1.4; padding-left: .8rem; border-left: 2px solid var(--c-transliteration); margin-top: .1rem; }
 .aid-mean { font-size: .7em; color: var(--c-translation); line-height: 1.45; padding-left: .8rem; border-left: 2px solid var(--c-translation); margin-top: .1rem; }

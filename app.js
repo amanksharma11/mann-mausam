@@ -136,8 +136,14 @@
       translit: translit,
       translation: (lang==="en") ? null : (translation? { en: translation } : null)
     };
-    p._hay = (p.title+" "+p.titleRoman+" "+p.titleEnglish+" "+plainText(stanzas)+" "+
-      (translit?plainText(translit):"")+" "+(translation?plainText(translation):"")+" "+p.tags.join(" ")).toLowerCase();
+    // Also index the AUTO-generated romanisation (title, body, tags) so a poem in Bangla/Hindi
+    // is searchable by its roman spelling even when the sheet has no title_roman.
+    var indic = (lang!=="en" && T.supports(lang));
+    var romanTitleGen = indic ? T.line(p.title) : "";
+    var romanBody = indic ? flatLines(stanzas).map(function(l){ return T.line(l); }).join(" ") : "";
+    var romanTags = p.tags.map(function(t){ return T.line(t); }).join(" ");
+    p._hay = (p.title+" "+p.titleRoman+" "+romanTitleGen+" "+p.titleEnglish+" "+plainText(stanzas)+" "+romanBody+" "+
+      (translit?plainText(translit):"")+" "+(translation?plainText(translation):"")+" "+p.tags.join(" ")+" "+romanTags).toLowerCase();
     p._rand = Math.random();   // stable-per-load tiebreak for poems sharing a date
     return p;
   }
@@ -566,10 +572,12 @@
   }
   // full stop (poem ended, reader closed, or navigated away)
   function stopListening(keepStatus){
+    var hadHighlight = !!$("#poemBody .reciting-line");
     speaking=false; recPaused=false; recMode=null; ttsGen++;
     if(audioEl){ audioEl.pause(); audioEl=null; }
     if(window.speechSynthesis) speechSynthesis.cancel();
-    stopKeepAlive(); reciteUI(); if(!keepStatus) rstatus("");
+    stopKeepAlive(); clearHighlight(); reciteUI(); if(!keepStatus) rstatus("");
+    if(hadHighlight) scrollReaderTop();   // stopping a recitation returns to the top
   }
 
   function getVoices(){ return new Promise(function(resolve){ if(!window.speechSynthesis) return resolve([]); var v=speechSynthesis.getVoices(); if(v.length) return resolve(v);
@@ -588,11 +596,28 @@
       if(v.localService) s+=1;                           // on-device is snappier
       return s; }
     return hits.slice().sort(function(a,b){ return score(b)-score(a); })[0]||null; }
+  // light up the line being recited and keep it in view (device voice only -- we know the
+  // current line because we speak line by line; an mp3 gives no such position)
+  function clearHighlight(){ $$("#poemBody .reciting-line").forEach(function(el){ el.classList.remove("reciting-line"); }); }
+  function highlightLine(idx){
+    clearHighlight();
+    if(!tts||!tts.lineEls) return;
+    var el=tts.lineEls[idx]; if(!el) return;
+    el.classList.add("reciting-line");
+    var pl=$("#reader .r-scroll"); if(!pl) return;
+    var pr=pl.getBoundingClientRect(), er=el.getBoundingClientRect();
+    var hd=$("#reader .r-head"); var stick=(hd&&getComputedStyle(hd).position==="sticky")?hd.offsetHeight:0;
+    if(er.top < pr.top+stick+24 || er.bottom > pr.bottom-24){   // scroll only when it drifts out of view
+      var band=pl.clientHeight-stick;
+      pl.scrollTop = Math.max(0, pl.scrollTop + (er.top-pr.top) - stick - band/2 + er.height/2);
+    }
+  }
   // speak the current line (tts.idx); each line's onend advances to the next. A generation
   // token (ttsGen) invalidates the onend of any line cancelled by pause/restart/stop.
   function ttsSpeak(){
     if(!speaking||recPaused||!tts) return;
     if(tts.idx>=tts.chunks.length){ stopListening(); return; }
+    highlightLine(tts.idx);
     var gen=ttsGen;
     var u=new SpeechSynthesisUtterance(tts.chunks[tts.idx]); u.voice=tts.voice; u.lang=tts.voice.lang; u.rate=tts.rv;
     u.onend=function(){ if(gen!==ttsGen||!speaking||recPaused) return; tts.idx++; ttsSpeak(); };
@@ -606,10 +631,13 @@
     getVoices().then(function(voices){
       var voice=pickVoice(voices,p.lang);
       if(!voice){ stopListening(true); rstatus(noVoiceHelp(p.lang),"warn"); return; }
-      var chunks=flatLines(p.stanzas).filter(function(l){return l&&l.trim();});
+      // pull the spoken lines from the DOM so each maps to a .line element (for highlighting).
+      // The first span in a .line is the poem text (any transliteration/translation is appended after).
+      var lineEls=$$("#poemBody .line").filter(function(el){ var sp=el.querySelector("span"); return sp && sp.textContent.trim(); });
+      var chunks=lineEls.map(function(el){ return el.querySelector("span").textContent.trim(); });
       if(!chunks.length){ stopListening(); return; }
       var rate=$("#rate"); var rv=rate?parseFloat(rate.value):0.86;
-      tts={ chunks:chunks, voice:voice, rv:rv, idx:0 };
+      tts={ chunks:chunks, lineEls:lineEls, voice:voice, rv:rv, idx:0 };
       speaking=true; recPaused=false; ttsGen++; speechSynthesis.cancel();
       reciteUI();
       rstatus((fromFallback?"That recording wouldn't play, so it's read by the ":"Read by the ")+voice.name+" voice on this device.","recite");
@@ -798,6 +826,21 @@
     $("#surpriseBtn").addEventListener("click", surprise);
     $("#readerPrev").addEventListener("click", function(){ goRelative(-1); });
     $("#readerNext").addEventListener("click", function(){ goRelative(1); });
+    // swipe left/right across the popup to move between poems (mainly for phones); a clearly
+    // horizontal drag navigates, while vertical drags still scroll the poem normally
+    (function(){
+      var panel=$(".reader-panel"); if(!panel) return;
+      var sx=0, sy=0, ok=false;
+      panel.addEventListener("touchstart", function(e){
+        if(e.touches.length!==1){ ok=false; return; }
+        ok=true; sx=e.touches[0].clientX; sy=e.touches[0].clientY;
+      }, {passive:true});
+      panel.addEventListener("touchend", function(e){
+        if(!ok) return; ok=false; var t=e.changedTouches[0]; if(!t) return;
+        var dx=t.clientX-sx, dy=t.clientY-sy;
+        if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.6){ goRelative(dx<0?1:-1); }   // swipe left = next
+      }, {passive:true});
+    })();
 
     document.addEventListener("click", function(e){
       var t=e.target;
