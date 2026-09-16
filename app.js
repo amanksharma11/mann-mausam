@@ -88,21 +88,50 @@
   var MONTHS={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12,
     january:1,february:2,march:3,april:4,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
   function pad2(n){ n=String(n|0); return n.length<2?"0"+n:n; }
+  /* Parse a date in almost any layout, with any separator (-, /, ., space, comma):
+       yyyy-mm-dd  yyyy/mm/dd  dd/mm/yyyy  dd-mm-yyyy  mm-dd-yyyy  mm/dd/yyyy
+       mmm-yyyy  mmm/yyyy  mmm yyyy  mmm,yyyy  "August 2025"  "30 Aug 2025"  yyyy  ...
+     Strategy: pull the 4-digit year and any month-name out first, then read the remaining
+     numbers -- so the separator never matters. Day-first is assumed when a d/m pair is
+     ambiguous (both <= 12), which suits how the sheet is filled. Never throws; anything that
+     isn't a real date returns blank (shown like an empty date). */
   function parseDate(raw){
     var s=String(raw==null?"":raw).trim(); if(!s) return null;
     var y=0,m=0,d=0,prec="raw",x;
-    if(x=s.match(/^Date\((\d{4}),(\d{1,2})(?:,(\d{1,2}))?/i)){ y=+x[1]; m=+x[2]+1; d=x[3]?+x[3]:0; prec=x[3]?"day":"month"; }      // gviz serial
-    else if(x=s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/)){ y=+x[1]; m=+x[2]; d=+x[3]; prec="day"; }                        // 2025-08-30
-    else if(x=s.match(/^(\d{4})[-\/.](\d{1,2})$/)){ y=+x[1]; m=+x[2]; prec="month"; }                                             // 2025-08
-    else if(x=s.match(/^([A-Za-z]{3,9})\.?\s+(\d{4})$/) && MONTHS[x[1].toLowerCase()]){ m=MONTHS[x[1].toLowerCase()]; y=+x[2]; prec="month"; }     // August 2025
-    else if(x=s.match(/^(\d{1,2})\s+([A-Za-z]{3,9})\.?,?\s+(\d{4})$/) && MONTHS[x[2].toLowerCase()]){ d=+x[1]; m=MONTHS[x[2].toLowerCase()]; y=+x[3]; prec="day"; }  // 30 August 2025
-    else if(x=s.match(/^([A-Za-z]{3,9})\.?\s+(\d{1,2}),?\s+(\d{4})$/) && MONTHS[x[1].toLowerCase()]){ m=MONTHS[x[1].toLowerCase()]; d=+x[2]; y=+x[3]; prec="day"; }  // August 30, 2025
-    else if(x=s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})$/)){ var a=+x[1],b=+x[2]; y=+x[3]; if(a>12){ d=a; m=b; } else if(b>12){ m=a; d=b; } else { d=a; m=b; } prec="day"; }   // 30/8/2025 (day-first when ambiguous)
-    else if(x=s.match(/^(\d{4})$/)){ y=+x[1]; prec="year"; }                                                                      // 2025
-    else { var dt=new Date(s); if(!isNaN(dt)){ y=dt.getFullYear(); m=dt.getMonth()+1; d=dt.getDate(); prec="day"; } }             // last resort
-    if(!y || y<1000 || y>3000) return { sort:"", disp:"", prec:"raw" };   // not a real date: keep the row, but show no date (treated like blank)
+    if(x=s.match(/^Date\((\d{4}),(\d{1,2})(?:,(\d{1,2}))?/i)){ y=+x[1]; m=+x[2]+1; d=x[3]?+x[3]:0; prec=x[3]?"day":"month"; }   // gviz serial (0-based month)
+    else {
+      var nameM=s.match(/[A-Za-z]{3,9}/), monByName=(nameM && MONTHS[nameM[0].toLowerCase()])||0;
+      // strip a leading/whole 4-digit year, then a month name, then read what numbers remain
+      var ym=s.match(/\b(\d{4})\b/); if(ym){ y=+ym[1]; }
+      var rest=s.replace(/\b\d{4}\b/, " ").replace(/[A-Za-z]{3,9}/, " ");
+      var nums=(rest.match(/\d{1,2}/g)||[]).map(Number);
+      if(monByName){                                                    // any "<month name> ... <year>" shape
+        m=monByName; if(nums.length){ d=nums[0]; } prec = d? "day":"month";
+      } else if(!y && !nums.length){                                    // nothing numeric at all
+        prec="raw";
+      } else if(y && nums.length===0){                                  // just a year
+        prec="year";
+      } else if(y && nums.length===1){                                  // year + month
+        m=nums[0]; prec="month";
+      } else if(nums.length>=2){                                        // a full date; year is either already found or one of the parts
+        if(!y){ // no 4-digit year seen -> the value was all short numbers; can't tell a year, treat as not-a-date
+          prec="raw";
+        } else {
+          // decide which remaining number is day vs month (day-first when ambiguous)
+          var a=nums[0], b=nums[1];
+          // if the year sat in the MIDDLE/last, a & b are the day/month in file order; if the year
+          // was first (yyyy-mm-dd) then a=month, b=day.
+          if(/^\s*\d{4}\b/.test(s)){ m=a; d=b; }                        // yyyy first -> mm then dd
+          else if(a>12){ d=a; m=b; } else if(b>12){ m=a; d=b; } else { d=a; m=b; }   // dd/mm (day-first default)
+          prec="day";
+        }
+      }
+    }
+    if(!y || y<1000 || y>3000) return { sort:"", disp:"", prec:"raw" };   // not a real date: shown like a blank date
+    if(m>12 && d<=12){ var t=m; m=d; d=t; }                              // obvious month/day swap
     if(m<1||m>12) m=0; if(d<1||d>31) d=0;
-    var disp = prec==="year" ? String(y) : (MONTH_NAMES[(m||1)-1]+" "+y);   // UI shows month + year (day omitted), matching the old format
+    if(!m) prec="year"; else if(!d && prec==="day") prec="month";
+    var disp = prec==="year" ? String(y) : (MONTH_NAMES[(m||1)-1]+" "+y);   // UI shows month + year (day omitted)
     return { sort: pad2(y)+"-"+pad2(m)+"-"+pad2(d), disp: disp, prec: prec };
   }
 
@@ -207,7 +236,11 @@
     // Build poems one row at a time so a single corrupt row is skipped, not the whole sheet.
     var raws=rowsToRaw(parseCSV(t)), poems=[], skipped=0;
     for(var i=0;i<raws.length;i++){
-      try{ poems.push(buildPoem(raws[i])); }
+      try{
+        var poem=buildPoem(raws[i]);
+        if(!poem.stanzas.length || !poem.title){ throw new Error("empty poem or title"); }   // corrupt/blank -> skip just this one
+        poems.push(poem);
+      }
       catch(e){ skipped++; console.warn("Skipped a poem row ("+(e&&e.message||e)+"): ", raws[i]&&raws[i].title); }
     }
     if(skipped) console.warn(skipped+" poem row(s) were skipped; the rest loaded normally.");
@@ -440,8 +473,8 @@
           (p.tags.length?'<div class="r-meta">'+p.tags.map(function(t){return '<span class="tag">'+tagLabel(t)+'</span>';}).join("")+'</div>':'')+
           (badges(p)?'<div class="r-badges">'+badges(p)+'</div>':'')+
         '</div>'+
+        (p.note?'<div class="r-note r-note--intro">'+esc(p.note)+'</div>':'')+   // the poet's note sits above the poem
         '<div class="poem-body lang-'+p.lang+'" id="poemBody">'+lines+'</div>'+
-        (p.note?'<div class="r-note">'+esc(p.note)+'</div>':'')+
         (hasImage(p)?'<figure class="r-image"><img alt="" loading="lazy" src="'+esc(p.image)+'"></figure>':'')+
       '</div>'+
       // fixed bottom bar: tools, aid captions, recite status
@@ -565,16 +598,30 @@
       setOn(btn,false); aidNote("meanNote","Translation is unavailable just now. The free service caps how much it will do in a day."+(err&&err.message?" ("+err.message+")":""), "warn");
     }).then(function(){ btn.disabled=false; });
   }
+  // Translate line by line, but several lines at once (a small pool) instead of strictly one
+  // after another -- a long poem finishes in a fraction of the time while staying well under
+  // the free service's rate limit. The first hard failure (e.g. daily cap) stops the batch.
   function machineTranslate(p){
     var jobs=[]; p.stanzas.forEach(function(st,s){ st.forEach(function(t,l){ if(t&&t.trim()) jobs.push({key:s+":"+l,text:t.trim()}); }); });
     var out={}, pair=p.lang+"|en";
     var email=(CFG.shareEmailWithTranslator&&CFG.contactEmail)?"&de="+encodeURIComponent(CFG.contactEmail):"";
-    function step(i){ if(i>=jobs.length) return Promise.resolve(out); var job=jobs[i];
+    var CONC=6, i=0, active=0, failed=null;
+    function one(job){
       return fetch("https://api.mymemory.translated.net/get?q="+encodeURIComponent(job.text.slice(0,480))+"&langpair="+pair+email)
         .then(function(r){return r.json();}).then(function(d){ var t=d&&d.responseData&&d.responseData.translatedText;
-          if(t){ if(/MYMEMORY WARNING|QUERY LENGTH LIMIT/i.test(t)) throw new Error("daily limit reached"); out[job.key]=t; } return step(i+1); });
+          if(t){ if(/MYMEMORY WARNING|QUERY LENGTH LIMIT/i.test(t)) throw new Error("daily limit reached"); out[job.key]=t; } });
     }
-    return step(0);
+    return new Promise(function(resolve,reject){
+      function pump(){
+        if(failed){ if(active===0) reject(failed); return; }
+        if(i>=jobs.length && active===0){ resolve(out); return; }
+        while(active<CONC && i<jobs.length && !failed){
+          active++;
+          one(jobs[i++]).catch(function(e){ failed=failed||e; }).then(function(){ active--; pump(); });
+        }
+      }
+      pump();
+    });
   }
 
   /* ---- recitation: her recording if present, else the device voice ----
