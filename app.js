@@ -473,8 +473,8 @@
           (p.tags.length?'<div class="r-meta">'+p.tags.map(function(t){return '<span class="tag">'+tagLabel(t)+'</span>';}).join("")+'</div>':'')+
           (badges(p)?'<div class="r-badges">'+badges(p)+'</div>':'')+
         '</div>'+
-        (p.note?'<div class="r-note r-note--intro"><span class="r-note-label">Author\'s Note:</span> '+esc(p.note)+'</div>':'')+   // the poet's note sits above the poem
         '<div class="poem-body lang-'+p.lang+'" id="poemBody">'+lines+'</div>'+
+        (p.note?'<div class="r-note"><span class="r-note-label">Author\'s Note:</span> '+esc(p.note)+'</div>':'')+   // the poet's note sits below the poem
         (hasImage(p)?'<figure class="r-image"><img alt="" loading="lazy" src="'+esc(p.image)+'"></figure>':'')+
       '</div>'+
       // fixed bottom bar: tools, aid captions, recite status
