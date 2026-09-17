@@ -235,6 +235,17 @@
   var POEMS=[], STATE={ q:"", lang:"all", theme:"all", attrs:[], shown:PAGE };
 
   function gvizUrl(id, tab){ return "https://docs.google.com/spreadsheets/d/"+encodeURIComponent(id)+"/gviz/tq?tqx=out:csv&sheet="+encodeURIComponent(tab||"Poems"); }
+  // Google's own CSV export returns the DISPLAYED cell values with no column type-coercion, so a
+  // date typed as text (or any odd cell) still comes through. gviz, by contrast, decides one type
+  // for a whole column and blanks any cell that doesn't fit -- a text date in a mostly-date column
+  // silently disappears. So we prefer the export when the tab's gid is set, gviz as a fallback.
+  function exportUrl(id, gid){ return "https://docs.google.com/spreadsheets/d/"+encodeURIComponent(id)+"/export?format=csv&gid="+encodeURIComponent(gid); }
+  function sheetUrls(){
+    var id=CFG.googleSheetId, urls=[];
+    if(CFG.googleSheetGid!=null && String(CFG.googleSheetGid).trim()!=="") urls.push(exportUrl(id, String(CFG.googleSheetGid).trim()));
+    urls.push(gvizUrl(id, CFG.googleSheetTab));
+    return urls;
+  }
 
   function poemsFromCSV(t){
     if(/^\s*</.test(t)) throw new Error("got a web page, not CSV (is the sheet shared as 'Anyone with the link'?)");
@@ -262,22 +273,27 @@
       .then(function(t){ POEMS=poemsFromCSV(t); sortPoems(); hideSourceNote(); afterLoad(); })
       .catch(onFail);
   }
-  /* Load order: live Google Sheet (if set) -> committed content/poems.csv -> built-in samples. */
+  /* Load order: live Google Sheet (export, then gviz) -> committed content/poems.csv -> samples. */
   function loadPoems(){
     if(!CFG.googleSheetId){
       tryLocalCSV(function(){ showSamples('Showing <strong>sample poems</strong> by Mousumee Ghosh. Connect your Google Sheet in <code>config.js</code> (or commit <code>content/poems.csv</code>) to load her own collection.'); });
       return;
     }
-    fetch(gvizUrl(CFG.googleSheetId, CFG.googleSheetTab))
-      .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.text(); })
-      .then(function(t){ POEMS=poemsFromCSV(t); sortPoems(); hideSourceNote(); afterLoad(); })
-      .catch(function(err){
-        console.warn("Live sheet load failed ("+err.message+") - trying the saved content/poems.csv");
+    var urls=sheetUrls();
+    (function tryUrl(i){
+      if(i>=urls.length){   // every live source failed -> saved CSV, then samples
+        console.warn("Live sheet load failed - trying the saved content/poems.csv");
         tryLocalCSV(function(err2){
           console.warn("content/poems.csv also unavailable ("+err2.message+") - using built-in samples");
           showSamples("Couldn't reach the poems just now. Showing a few sample poems for the moment.");
         });
-      });
+        return;
+      }
+      fetch(urls[i], { cache: "no-store" })
+        .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.text(); })
+        .then(function(t){ POEMS=poemsFromCSV(t); sortPoems(); hideSourceNote(); afterLoad(); })
+        .catch(function(err){ console.warn("Sheet source "+(i+1)+" of "+urls.length+" failed ("+err.message+")"); tryUrl(i+1); });
+    })(0);
   }
   function sortPoems(){ POEMS.sort(function(a,b){
     var ad=a.dateSort||"", bd=b.dateSort||"";

@@ -42,6 +42,11 @@ window.SITE_CONFIG = {
   // Until set, the site shows the bundled sample poems.
   googleSheetId:   "1m4UB-lK0lIMyB7jqsJCn_adAMAyEC5UeTBb04EcTOfE",
   googleSheetTab:  "Poems",
+  // The Poems tab's gid (the "gid=..." number in the sheet URL when that tab is open).
+  // With it set, the site reads the sheet via Google's CSV export, which returns exactly what
+  // each cell displays -- so a date (or anything) typed as text still shows, instead of being
+  // dropped the way the older endpoint drops cells that don't match a column's guessed type.
+  googleSheetGid:  "490640914",
 
   /* ---- Feature switches -------------------------------------------------- */
   features: {
