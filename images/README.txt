@@ -1,5 +1,5 @@
-﻿Put poem images here (e.g. nodir-kache.jpg), then reference them from the
-sheet's "image" column as a relative path, e.g.  images/nodir-kache.jpg
+﻿Put poem images here (e.g. birohi-shrabon.jpg), then reference them from the
+sheet's "image" column as a relative path, e.g.  images/birohi-shrabon.jpg
 
 You can also paste a full public image URL in the "image" column instead
 (https://...). Either works. Leave the cell blank for no image.

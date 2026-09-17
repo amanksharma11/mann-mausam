@@ -63,10 +63,10 @@ Order doesn't matter — the importer reads by header name.
 
 | Column | Required | Notes |
 |--------|----------|-------|
-| `slug_link` | recommended | Short code for the share link (`nodir-kache`). Made from the title if blank. **Never change a slug once it's been shared.** |
+| `slug_link` | recommended | Short code for the share link (`birohi-shrabon`). Made from the title if blank. **Never change a slug once it's been shared.** |
 | `title` | ✅ | In the poem's own script. |
-| `title_roman` | optional | Romanised title (`Nodir Kache`). Auto-generated if blank. |
-| `title_english` | optional | English title (`By the River`). |
+| `title_roman` | optional | Romanised title (`Birohi Shrabon`). Auto-generated if blank. |
+| `title_english` | optional | English title (`The Lovelorn Monsoon`). |
 | `language` | ✅ | `bn`, `hi`, or `en` (also accepts Bangla / Hindi / English). Sets the font, corner motif and reading aids. |
 | `date` | recommended | `YYYY-MM-DD`. Newest sorts first, and drives "Poem of the day". Undated poems sink to the end. |
 | `show_on_website` | ✅ | `yes` to publish the poem. Anything else — blank, `no`, a draft note — hides it. |
@@ -74,7 +74,7 @@ Order doesn't matter — the importer reads by header name.
 | `translation_english` | optional | Her own English translation, shaped like the poem (same lines). Falls back to a rough machine translation when blank. |
 | `transliteration` | optional | Hand-corrected romanisation, shaped like the poem. Overrides the automatic engine line-by-line. |
 | `tags` | optional | Comma-separated themes — become the filter chips. |
-| `audio` | optional | Path/URL to an **mp3 recitation** (e.g. `audio/nodir-kache.mp3`). If present, "Recite" plays it instead of the device voice. |
+| `audio` | optional | Path/URL to an **mp3 recitation** (e.g. `audio/birohi-shrabon.mp3`). If present, "Recite" plays it instead of the device voice. |
 | `image` | optional | Image URL/path to show with the poem. |
 | `note` | optional | A poet's / translator's note. |
 
