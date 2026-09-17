@@ -229,7 +229,7 @@
   }
 
   /* --------------------------------------------------------------- data load */
-  var PAGE=24;   // how many poem cards to show before "Show more"
+  var PAGE=12;   // how many poem cards to show before "Show more" (keeps mobile scrolling short)
   var POEMS=[], STATE={ q:"", lang:"all", theme:"all", attrs:[], shown:PAGE };
 
   function gvizUrl(id, tab){ return "https://docs.google.com/spreadsheets/d/"+encodeURIComponent(id)+"/gviz/tq?tqx=out:csv&sheet="+encodeURIComponent(tab||"Poems"); }
