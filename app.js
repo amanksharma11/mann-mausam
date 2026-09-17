@@ -937,15 +937,18 @@
     var seq=[ ["bn","bn"], ["hi","bn"], ["hi","hi"], ["en","hi"], ["en","en"], ["bn","en"] ];
     var i=0;
     function setWord(el,idx,lang){ el.textContent=(words[lang]||[])[idx]||""; el.className="ht-word lang-"+lang; el.setAttribute("lang",lang); }
-    function fadeWord(el,idx,lang){ el.style.opacity="0"; setTimeout(function(){ setWord(el,idx,lang); el.style.opacity="1"; }, 480); }
     setWord(w1,0,seq[0][0]); setWord(w2,1,seq[0][1]);
     t.setAttribute("aria-label", CFG.siteName||"");
     if(seq.length<2) return;
     if(titleTimer) clearInterval(titleTimer);
     titleTimer=setInterval(function(){
-      var n=(i+1)%seq.length;
-      if(seq[i][0]!==seq[n][0]) fadeWord(w1,0,seq[n][0]);   // fade only the word that actually changes; the other stays put
-      if(seq[i][1]!==seq[n][1]) fadeWord(w2,1,seq[n][1]);
+      var n=(i+1)%seq.length, a=seq[n][0], b=seq[n][1];
+      // Cross-fade the WHOLE title: fade out, swap both words while invisible, fade back in.
+      // Fading only the changed word (as before) left the other word visibly jumping sideways
+      // when the new word's width differed -- abrupt on iOS/WebKit. Fading the whole line hides
+      // that reflow and animates reliably everywhere.
+      t.style.opacity="0";
+      setTimeout(function(){ setWord(w1,0,a); setWord(w2,1,b); t.style.opacity="1"; }, 420);
       i=n;
     }, 2800);
   }

@@ -257,8 +257,8 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 .brand { display: flex; align-items: center; gap: .65rem; text-decoration: none; color: var(--ink); }
 .brand-mark { flex: none; border-radius: 9px; box-shadow: var(--shadow-sm); }
 .brand-text { display: flex; flex-direction: column; line-height: 1.06; }
-.brand-name { font-family: var(--f-display); font-weight: 800; font-size: 1.28rem; font-variation-settings: "SOFT" 30, "WONK" 1, "opsz" 40; }
-.brand-sub  { font-size: .74rem; letter-spacing: .04em; color: var(--ink-soft); }
+.brand-name { font-family: var(--f-display); font-weight: 800; font-size: 1.28rem; font-variation-settings: "SOFT" 30, "WONK" 1, "opsz" 40; white-space: nowrap; }
+.brand-sub  { font-size: .74rem; letter-spacing: .04em; color: var(--ink-soft); white-space: nowrap; }
 .site-nav { display: flex; gap: .35rem; flex-wrap: wrap; }
 .site-nav a {
   text-decoration: none; color: var(--ink); font-family: var(--f-display);
@@ -286,15 +286,16 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
   :root:not([data-theme="light"]) .site-nav a:not(.active):hover { background: color-mix(in srgb, var(--terracotta) 32%, transparent); border-color: color-mix(in srgb, var(--terracotta) 55%, var(--line)); }
 }
 @media (max-width: 560px) {
-  /* keep the desktop arrangement on phones too: brand (logo + name + subtitle)
-     on the left, nav on the right -- just tightened so it fits a narrow screen.
-     The subtitle stays visible on every device. */
+  /* Tighten the header so the brand and the nav don't collide on a narrow phone.
+     The subtitle is hidden here -- the hero repeats "Poems by Mousumee Ghosh" just
+     below -- which frees the room the brand needs to sit on one clean line. */
   .brand { gap: .5rem; }
   .brand-mark { width: 34px; height: 34px; }
-  .brand-name { font-size: 1.08rem; }
-  .brand-sub { font-size: .62rem; }
-  .site-nav { gap: .18rem; flex-wrap: nowrap; }
-  .site-nav a { padding: .3em .5em; font-size: .8rem; }
+  .brand-name { font-size: 1.02rem; }
+  .brand-sub { display: none; }
+  .site-nav { gap: .15rem; flex-wrap: nowrap; }
+  .site-nav a { padding: .28em .5em; font-size: .78rem; }
+  .header-inner { gap: .5rem; padding-right: clamp(44px, 8vw, 68px); }
 }
 
 /* ============================ Hero ======================================== */
@@ -361,13 +362,14 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
   border-radius: var(--radius); padding: clamp(1.4rem, 4vw, 2.4rem); position: relative; overflow: hidden;
 }
 @media (max-width: 620px) { .potd .potd-card { grid-template-columns: 1fr; } }
-.potd-side { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); font-family: var(--f-display); font-weight: 600; font-size: .82rem; letter-spacing: .14em; text-transform: uppercase; color: #fff5ea; background: linear-gradient(0deg, var(--terracotta), var(--terracotta-2)); padding: 1rem .5rem; border-radius: 8px; display: grid; place-items: center; }
-@media (max-width: 620px) { .potd-side { writing-mode: horizontal-tb; transform: none; padding: .4rem; } }
+/* A quiet spine label, not a filled pill -- the orange background read as a clickable button. */
+.potd-side { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); font-family: var(--f-type); font-weight: 700; font-size: .74rem; letter-spacing: .22em; text-transform: uppercase; color: var(--terracotta-2); background: none; padding: 0 .1rem; display: grid; place-items: center; }
+@media (max-width: 620px) { .potd-side { writing-mode: horizontal-tb; transform: none; padding: 0 0 .1rem; place-items: center start; } }
 .potd-main h3 { font-size: clamp(1.6rem, 4.5vw, 2.3rem); margin: 0 0 .1em; }
 .potd-main h3.lang-bn { font-family: var(--f-bn-disp); } .potd-main h3.lang-hi { font-family: var(--f-hi-disp); }
 .potd-main .roman { font-family: var(--f-type); font-size: .9rem; letter-spacing: .03em; color: var(--ink-soft); }
-.potd-verse { font-size: clamp(1.1rem, 2.6vw, 1.35rem); margin: 1rem 0 1.4rem; white-space: pre-line;
-  max-height: 10.5rem; overflow-y: auto; overflow-x: hidden; padding-right: .5rem;
+.potd-verse { font-size: clamp(1.1rem, 2.6vw, 1.35rem); margin: 1rem 0 1.4rem; white-space: pre-line; line-height: 1.6;
+  max-height: 16.5em; overflow-y: auto; overflow-x: hidden; padding-right: .5rem;   /* ~10 lines before it scrolls */
   scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ink) 30%, transparent) transparent; }
 .potd-verse::-webkit-scrollbar { width: 6px; }
 .potd-verse::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--ink) 28%, transparent); border-radius: 3px; }
