@@ -151,7 +151,12 @@
     if(p.lang==="en"){ parts=[p.titleRoman, p.titleEnglish]; }
     else { parts=[romanTitle(p), p.titleEnglish]; }
     parts=parts.map(function(s){ return String(s||"").trim(); }).filter(Boolean);
-    return uniq(parts).join(" · ");
+    var out=uniq(parts).join(" · ");
+    // English has no transliteration to fall back on, so when neither column is filled we
+    // echo the title itself into the roman slot -- keeps the same title/poem spacing the
+    // Bangla/Hindi cards get from their romanisation.
+    if(!out && p.lang==="en") out=String(p.title||"").trim();
+    return out;
   }
 
   /* ---- CSV parsing (quoted fields with newlines/commas survive) ---- */
@@ -390,7 +395,9 @@
     var p=poemOfTheDay(); if(!p){ $("#potdWrap").hidden=true; return; }
     $("#potdWrap").hidden=false;
     var r=subLine(p);
-    var verse=p.stanzas.slice(0,2).map(function(st){return st.join("\n");}).join("\n\n");
+    // Show the whole poem, but inside a fixed-height scroll box (like the reader) so the
+    // section stays the same height however long the poem is.
+    var verse=plainText(p.stanzas);
     $("#potd").innerHTML='<div class="potd-card reveal">'+
       '<div class="potd-side">Today’s poem</div>'+
       '<div class="potd-main">'+
@@ -400,6 +407,7 @@
         '<button class="btn btn--hero" data-slug="'+esc(p.slug)+'">Read it, hear it →</button>'+
       '</div>'+
     '</div>';
+    var pv=$("#potd .potd-verse"); if(pv && pv.scrollHeight > pv.clientHeight+2) pv.classList.add("is-scroll");   // fade the edge only when it actually scrolls
     observeReveals();
   }
 

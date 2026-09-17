@@ -366,7 +366,14 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 .potd-main h3 { font-size: clamp(1.6rem, 4.5vw, 2.3rem); margin: 0 0 .1em; }
 .potd-main h3.lang-bn { font-family: var(--f-bn-disp); } .potd-main h3.lang-hi { font-family: var(--f-hi-disp); }
 .potd-main .roman { font-family: var(--f-type); font-size: .82rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); }
-.potd-verse { font-size: clamp(1.1rem, 2.6vw, 1.35rem); margin: 1rem 0 1.4rem; white-space: pre-line; }
+.potd-verse { font-size: clamp(1.1rem, 2.6vw, 1.35rem); margin: 1rem 0 1.4rem; white-space: pre-line;
+  max-height: 10.5rem; overflow-y: auto; overflow-x: hidden; padding-right: .5rem;
+  scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ink) 30%, transparent) transparent; }
+.potd-verse::-webkit-scrollbar { width: 6px; }
+.potd-verse::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--ink) 28%, transparent); border-radius: 3px; }
+.potd-verse::-webkit-scrollbar-track { background: transparent; }
+/* fade the bottom edge only when the poem is long enough to scroll */
+.potd-verse.is-scroll { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent 100%); mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent 100%); }
 .potd-verse.lang-bn { font-family: var(--f-bn); } .potd-verse.lang-hi { font-family: var(--f-hi); }
 
 /* ============================ Controls ==================================== */
