@@ -421,7 +421,6 @@
     // section stays the same height however long the poem is.
     var verse=plainText(p.stanzas);
     $("#potd").innerHTML='<div class="potd-card reveal">'+
-      '<div class="potd-side">Today’s poem</div>'+
       '<div class="potd-main">'+
         '<h3 class="lang-'+p.lang+'">'+esc(p.title)+'</h3>'+
         (r?'<span class="roman">'+esc(r)+'</span>':'')+
