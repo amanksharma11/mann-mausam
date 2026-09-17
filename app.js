@@ -224,7 +224,7 @@
     var romanTags = p.tags.map(function(t){ return T.line(t); }).join(" ");
     p._hay = (p.title+" "+p.titleRoman+" "+romanTitleGen+" "+p.titleEnglish+" "+plainText(stanzas)+" "+romanBody+" "+
       (translit?plainText(translit):"")+" "+(translation?plainText(translation):"")+" "+p.tags.join(" ")+" "+romanTags).toLowerCase();
-    p._rand = Math.random();   // stable-per-load tiebreak for poems sharing a date
+    p._idx = 0;   // position in the source order (set by the loader); tiebreak for undated / same-date poems
     return p;
   }
 
@@ -259,9 +259,10 @@
     }
     if(skipped) console.warn(skipped+" poem row(s) were skipped; the rest loaded normally.");
     if(!poems.length) throw new Error("no usable rows");   // only fall back when NOTHING loaded
+    poems.forEach(function(p,i){ p._idx=i; });             // remember the sheet's row order
     return poems;
   }
-  function showSamples(msg,tone){ POEMS=SAMPLE_ROWS.map(buildPoem); sortPoems(); showSourceNote(msg,tone); afterLoad(); }
+  function showSamples(msg,tone){ POEMS=SAMPLE_ROWS.map(buildPoem); POEMS.forEach(function(p,i){ p._idx=i; }); sortPoems(); showSourceNote(msg,tone); afterLoad(); }
   /* The last-saved copy committed in the repo (content/poems.csv). It's the fallback when
      the live sheet can't be reached, and the source when no sheet is configured -- tried
      before the built-in samples so the site keeps showing her real poems through an outage. */
@@ -295,10 +296,10 @@
   }
   function sortPoems(){ POEMS.sort(function(a,b){
     var ad=a.dateSort||"", bd=b.dateSort||"";
-    if(!ad&&!bd) return a._rand-b._rand;           // undated / unrecognised: random among themselves
+    if(!ad&&!bd) return a._idx-b._idx;             // undated / unrecognised: keep the source (sheet) order
     if(!ad) return 1; if(!bd) return -1;           // those sink to the end
     var c=bd.localeCompare(ad);                    // newest first (YYYY-MM-DD keys compare cleanly)
-    return c!==0 ? c : (a._rand-b._rand);          // same date: random within
+    return c!==0 ? c : (a._idx-b._idx);            // same date: source order (stable, not random)
   }); }
   function showSourceNote(html,tone){ var n=$("#sourceNote"); n.innerHTML=html; n.hidden=false; if(tone) n.setAttribute("data-tone",tone); else n.removeAttribute("data-tone"); }
   function hideSourceNote(){ var n=$("#sourceNote"); n.hidden=true; n.removeAttribute("data-tone"); }
@@ -400,11 +401,17 @@
   }
 
   /* ---------------------------------------------------------- poem of the day */
-  function hashInt(n){ n=n|0; n=Math.imul(n^(n>>>16),0x45d9f3b); n=Math.imul(n^(n>>>16),0x45d9f3b); return (n^(n>>>16))>>>0; }
+  function hashStr(str){ var h=2166136261>>>0; for(var i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }   // FNV-1a
+  // The same poem all day, regardless of the grid's order: each poem is scored by its slug + the
+  // day, and the top score wins. Because the score is per-poem (not an array index), adding or
+  // removing OTHER poems doesn't change today's pick -- it only changes if the winning poem itself
+  // is gone, in which case the next-highest naturally takes over.
   function poemOfTheDay(){
     if(!POEMS.length) return null;
-    var d=new Date(); var seed=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
-    return POEMS[hashInt(seed)%POEMS.length];
+    var d=new Date(), day=d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
+    var best=null, bestScore=-1;
+    for(var i=0;i<POEMS.length;i++){ var s=hashStr(POEMS[i].slug+"@"+day); if(s>bestScore){ bestScore=s; best=POEMS[i]; } }
+    return best;
   }
   function renderPotd(){
     var p=poemOfTheDay(); if(!p){ $("#potdWrap").hidden=true; return; }
