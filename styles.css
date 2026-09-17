@@ -254,12 +254,15 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
   border-bottom: 2px solid var(--line);
 }
 .header-inner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .55rem 0; padding-right: clamp(58px, 9vw, 96px); }
-.brand { display: flex; align-items: center; gap: .65rem; text-decoration: none; color: var(--ink); }
+.brand { display: flex; align-items: center; gap: .65rem; text-decoration: none; color: var(--ink); min-width: 0; }
 .brand-mark { flex: none; border-radius: 9px; box-shadow: var(--shadow-sm); }
-.brand-text { display: flex; flex-direction: column; line-height: 1.06; }
-.brand-name { font-family: var(--f-display); font-weight: 800; font-size: 1.28rem; font-variation-settings: "SOFT" 30, "WONK" 1, "opsz" 40; white-space: nowrap; }
+.brand-text { display: flex; flex-direction: column; line-height: 1.08; min-width: 0; }
+/* The name may wrap to two lines ("Mann" / "Mausam") when the screen is too narrow, rather
+   than sliding under the nav. min-width:0 lets the brand box shrink so the text wraps inside
+   it, while the nav (flex:none) keeps its size -- so the flex `gap` between them is preserved. */
+.brand-name { font-family: var(--f-display); font-weight: 800; font-size: 1.28rem; font-variation-settings: "SOFT" 30, "WONK" 1, "opsz" 40; }
 .brand-sub  { font-size: .74rem; letter-spacing: .04em; color: var(--ink-soft); white-space: nowrap; }
-.site-nav { display: flex; gap: .35rem; flex-wrap: wrap; }
+.site-nav { display: flex; gap: .35rem; flex-wrap: nowrap; flex: none; }
 .site-nav a {
   text-decoration: none; color: var(--ink); font-family: var(--f-display);
   font-weight: 600; font-size: .95rem; padding: .3em .8em; border-radius: 999px;
@@ -363,7 +366,7 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 }
 @media (max-width: 620px) { .potd .potd-card { grid-template-columns: 1fr; } }
 /* A quiet spine label, not a filled pill -- the orange background read as a clickable button. */
-.potd-side { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); font-family: var(--f-type); font-weight: 700; font-size: .74rem; letter-spacing: .22em; text-transform: uppercase; color: var(--terracotta-2); background: none; padding: 0 .1rem; display: grid; place-items: center; }
+.potd-side { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); font-family: var(--f-type); font-weight: 700; font-size: .9rem; letter-spacing: .2em; text-transform: uppercase; color: var(--terracotta-2); background: none; padding: 0 .1rem; display: grid; place-items: center; }
 @media (max-width: 620px) { .potd-side { writing-mode: horizontal-tb; transform: none; padding: 0 0 .1rem; place-items: center start; } }
 .potd-main h3 { font-size: clamp(1.6rem, 4.5vw, 2.3rem); margin: 0 0 .1em; }
 .potd-main h3.lang-bn { font-family: var(--f-bn-disp); } .potd-main h3.lang-hi { font-family: var(--f-hi-disp); }
