@@ -369,7 +369,8 @@
   function cardHTML(p){
     var r=subLine(p);
     return '<button class="poem-card lang-'+p.lang+' reveal" data-slug="'+esc(p.slug)+'">'+
-      '<span class="pc-lang '+p.lang+'">'+esc(langName(p.lang))+'</span>'+
+      '<div class="pc-head"><span class="pc-lang '+p.lang+'">'+esc(langName(p.lang))+'</span>'+
+        (p.dateDisp?'<span class="pc-date">'+esc(p.dateDisp)+'</span>':'')+'</div>'+
       '<h3>'+esc(p.title)+'</h3>'+
       (r?'<span class="roman">'+esc(r)+'</span>':'')+
       '<p class="snippet">'+esc(snippet(p))+'</p>'+
