@@ -420,10 +420,13 @@
     // Show the whole poem, but inside a fixed-height scroll box (like the reader) so the
     // section stays the same height however long the poem is.
     var verse=plainText(p.stanzas);
-    $("#potd").innerHTML='<div class="potd-card reveal">'+
+    var meta = p.tags.map(function(t){ return '<span class="tag">'+tagLabel(t)+'</span>'; }).join("")+badges(p);
+    $("#potd").innerHTML='<div class="potd-card reveal lang-'+p.lang+'">'+
       '<div class="potd-main">'+
+        '<span class="potd-lang lang-'+p.lang+'">'+esc(langName(p.lang))+(p.dateDisp?' · '+esc(p.dateDisp):'')+'</span>'+
         '<h3 class="lang-'+p.lang+'">'+esc(p.title)+'</h3>'+
         (r?'<span class="roman">'+esc(r)+'</span>':'')+
+        (meta?'<div class="potd-meta">'+meta+'</div>':'')+
         '<div class="potd-verse lang-'+p.lang+'">'+esc(verse)+'</div>'+
         '<button class="btn btn--hero" data-slug="'+esc(p.slug)+'">Read it, hear it →</button>'+
       '</div>'+
