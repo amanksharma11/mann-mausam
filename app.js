@@ -261,14 +261,14 @@
     if(!poems.length) throw new Error("no usable rows");   // only fall back when NOTHING loaded
     return poems;
   }
-  function showSamples(msg){ POEMS=SAMPLE_ROWS.map(buildPoem); sortPoems(); showSourceNote(msg); afterLoad(); }
+  function showSamples(msg,tone){ POEMS=SAMPLE_ROWS.map(buildPoem); sortPoems(); showSourceNote(msg,tone); afterLoad(); }
   /* The last-saved copy committed in the repo (content/poems.csv). It's the fallback when
      the live sheet can't be reached, and the source when no sheet is configured -- tried
      before the built-in samples so the site keeps showing her real poems through an outage. */
-  function tryLocalCSV(onFail){
+  function tryLocalCSV(onFail, okMsg){
     fetch("content/poems.csv", { cache: "no-store" })
       .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.text(); })
-      .then(function(t){ POEMS=poemsFromCSV(t); sortPoems(); hideSourceNote(); afterLoad(); })
+      .then(function(t){ POEMS=poemsFromCSV(t); sortPoems(); if(okMsg) showSourceNote(okMsg,"warn"); else hideSourceNote(); afterLoad(); })
       .catch(onFail);
   }
   /* Load order: live Google Sheet (export, then gviz) -> committed content/poems.csv -> samples. */
@@ -279,12 +279,12 @@
     }
     var urls=sheetUrls();
     (function tryUrl(i){
-      if(i>=urls.length){   // every live source failed -> saved CSV, then samples
+      if(i>=urls.length){   // every live source failed -> saved CSV, then built-in poems
         console.warn("Live sheet load failed - trying the saved content/poems.csv");
         tryLocalCSV(function(err2){
-          console.warn("content/poems.csv also unavailable ("+err2.message+") - using built-in samples");
-          showSamples("Couldn't reach the latest poems just now. Showing the built-in copy of her collection for the moment.");
-        });
+          console.warn("content/poems.csv also unavailable ("+err2.message+") - using built-in poems");
+          showSamples("Couldn't reach the live sheet or the backup copy just now. Showing the built-in poems for the moment.", "warn");
+        }, "Couldn't reach the live sheet just now. These poems are from the backup copy.");
         return;
       }
       fetch(urls[i], { cache: "no-store" })
@@ -300,8 +300,8 @@
     var c=bd.localeCompare(ad);                    // newest first (YYYY-MM-DD keys compare cleanly)
     return c!==0 ? c : (a._rand-b._rand);          // same date: random within
   }); }
-  function showSourceNote(html){ var n=$("#sourceNote"); n.innerHTML=html; n.hidden=false; }
-  function hideSourceNote(){ $("#sourceNote").hidden=true; }
+  function showSourceNote(html,tone){ var n=$("#sourceNote"); n.innerHTML=html; n.hidden=false; if(tone) n.setAttribute("data-tone",tone); else n.removeAttribute("data-tone"); }
+  function hideSourceNote(){ var n=$("#sourceNote"); n.hidden=true; n.removeAttribute("data-tone"); }
 
   // Share links key on the slug, so two poems must never share one. On a collision the
   // later poem (in sorted order) gets -2, -3, … appended; the first keeps the clean slug.
