@@ -308,6 +308,13 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
 .hero-mandala--2 { color: var(--teal); left: auto; right: -14%; top: auto; bottom: -30%; width: min(50vw, 420px); animation-duration: 120s; animation-direction: reverse; opacity: .09; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .hero-mandala { animation: none; } }
+.hero-inner { position: relative; z-index: 1; }   /* keep the title, text and buttons above the mandalas */
+/* On phones the hero is tall and narrow, so the desktop offsets pushed the bottom-right
+   mandala off-screen. Pull both back toward the corners with gentler offsets so each peeks in. */
+@media (max-width: 640px) {
+  .hero-mandala    { width: min(64vw, 300px); top: -4%; left: -24%; }
+  .hero-mandala--2 { width: min(64vw, 300px); right: -24%; bottom: -4%; top: auto; left: auto; }
+}
 
 .hero-inner { position: relative; }
 .hero-eyebrow { font-family: var(--f-type); text-transform: uppercase; letter-spacing: clamp(.12em,1.2vw,.3em); font-size: clamp(.6rem,2.6vw,.72rem); color: var(--terracotta-2); display: flex; align-items: center; justify-content: center; gap: .8em; flex-wrap: wrap; padding-inline: .5rem; }
