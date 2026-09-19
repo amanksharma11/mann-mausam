@@ -313,7 +313,8 @@ a:not(.btn) { color: var(--terracotta-2); }   /* buttons keep their own colour, 
    mandala off-screen. Pull both back toward the corners with gentler offsets so each peeks in. */
 @media (max-width: 640px) {
   .hero-mandala    { width: min(64vw, 300px); top: -4%; left: -24%; }
-  .hero-mandala--2 { width: min(64vw, 300px); right: -24%; bottom: -4%; top: auto; left: auto; }
+  /* smaller and tucked further into the corner, so it's only partly visible */
+  .hero-mandala--2 { width: min(50vw, 210px); right: -30%; bottom: -12%; top: auto; left: auto; }
 }
 
 .hero-inner { position: relative; }
